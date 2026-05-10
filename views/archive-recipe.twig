@@ -1,0 +1,152 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    {% set archive_title = recipe_archive.title|default(title|default('Przepisy')) %}
+    {% set archive_description = recipe_archive.description|default('Zbior przepisow w stylu go4taste.') %}
+    {% set sample_ads_products = [
+        {
+            'name': 'Pistacje luskane surowe niesolone - 500g',
+            'price': '65,00 zl',
+            'link': 'https://go4taste.pl/pistacje-niesolone-luskane-nieprazone-duze-500g.html',
+            'picture': 'https://go4taste.pl/1655-home_default/pistacje-niesolone-luskane-nieprazone-duze-500g.jpg'
+        },
+        {
+            'name': 'Pistacje luskane surowe niesolone - 1kg',
+            'price': '119,00 zl',
+            'link': 'https://go4taste.pl/pistacje-niesolone-luskane-nieprazone-duze-1kg.html',
+            'picture': 'https://go4taste.pl/1656-home_default/pistacje-niesolone-luskane-nieprazone-duze-1kg.jpg'
+        },
+        {
+            'name': 'Pasta z pistacji 100%',
+            'price': '33,00 zl',
+            'link': 'https://go4taste.pl/krem-z-pistacji-100.html',
+            'picture': 'https://go4taste.pl/1462-home_default/pasta-z-pistacji-100.jpg'
+        }
+    ] %}
+
+    <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
+        Jestes tutaj:
+        <a href="{{ site.url }}/przepisy/">Przepisy</a> /
+        <span>{{ archive_title }}</span>
+    </nav>
+
+    <div class="g4t-archive-hero-shell" data-g4t-archive-hero>
+        <div class="g4t-archive-hero-grid site-container">
+            <div class="g4t-archive-hero-identity">
+                <p class="g4t-archive-hero-eyebrow">Skladnik</p>
+                <h1 class="g4t-archive-hero-title">
+                    <span class="g4t-archive-hero-title__line1">Przepisy</span>
+                    <span class="g4t-archive-hero-title__line2">{{ archive_title }}</span>
+                </h1>
+                <p class="g4t-archive-hero-lead">{{ archive_description }}</p>
+
+                <ul class="g4t-archive-hero-stats" aria-label="Charakterystyka zbioru przepisow">
+                    <li class="g4t-archive-hero-stats__item">
+                        <span class="g4t-archive-hero-stats__value">{{ posts|length }}</span>
+                        <span class="g4t-archive-hero-stats__label">przepisow</span>
+                    </li>
+                    <li class="g4t-archive-hero-stats__item">
+                        <span class="g4t-archive-hero-stats__value">35-90</span>
+                        <span class="g4t-archive-hero-stats__label">min sredni czas</span>
+                    </li>
+                    <li class="g4t-archive-hero-stats__item">
+                        <span class="g4t-archive-hero-stats__value">3</span>
+                        <span class="g4t-archive-hero-stats__label">poziomy trudnosci</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="g4t-archive-hero-visual">
+                <div class="g4t-archive-hero-visual__photo-wrap">
+                    <img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Pistacje luskane" loading="eager">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="site-container ingredient-archive">
+        <section class="archive-results" aria-labelledby="archive-results-title">
+            <div class="archive-results__head">
+                <h2 id="archive-results-title">{{ archive_title }}</h2>
+                <p class="archive-results__count">{{ posts.pagination.total|default(posts|length) }} przepisow</p>
+            </div>
+
+            <ul class="recipe-archive-grid">
+                {% for post_item in posts %}
+                    <li class="recipe-teaser-card">
+                        <a href="{{ post_item.link|e('esc_url') }}" class="recipe-teaser-card__link">
+                            {% if post_item.thumbnail %}
+                                <img src="{{ post_item.thumbnail.src|e('esc_url') }}" alt="{{ post_item.title }}" loading="lazy">
+                            {% endif %}
+                            <div class="recipe-teaser-card__body">
+                                <h3>{{ post_item.title }}</h3>
+                                <p>{{ post_item.preview.length(22).read_more('') }}</p>
+                                <div class="recipe-teaser-card__meta">
+                                    <span>~{{ post_item.meta('recipe_time_total')|default('35 min') }}</span>
+                                    <span>{{ post_item.meta('recipe_difficulty')|default('Latwy') }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+
+                    {% if loop.index == 3 %}
+                        <li class="recipe-teaser-card recipe-teaser-card--ad">
+                            <div class="g4t-ads-in-grid">
+                                <div class="g4t-ads-in-grid__surface">
+                                    <p class="g4t-ads-in-grid__kicker">Go4Taste.pl</p>
+                                    <section class="g4t-ads-hero" aria-labelledby="g4t-ads-title-grid" data-g4t-ads-hero>
+                                        <div class="g4t-ads-hero__head">
+                                            <h2 id="g4t-ads-title-grid" class="g4t-ads-hero__title">Autopromocja</h2>
+                                        </div>
+
+                                        <div class="g4t-ads-hero__viewport" tabindex="0" role="group" aria-label="Lista produktow autopromocyjnych Go4Taste.pl">
+                                            <ul class="g4t-ads-hero__track">
+                                                {% for product_data in sample_ads_products %}
+                                                    <li class="g4t-product-card">
+                                                        <a class="g4t-product-card__link" href="{{ product_data.link|e('esc_url') }}">
+                                                            <figure class="g4t-product-card__figure">
+                                                                <img class="g4t-product-card__image" src="{{ product_data.picture|e('esc_url') }}" alt="{{ product_data.name }}" loading="lazy">
+                                                            </figure>
+                                                            <div class="g4t-product-card__info">
+                                                                <div class="g4t-product-card__top">
+                                                                    <h3 class="g4t-product-card__title">{{ product_data.name }}</h3>
+                                                                </div>
+                                                                <div class="g4t-product-card__bottom">
+                                                                    <p class="g4t-product-card__price">{{ product_data.price }}</p>
+                                                                    <span class="g4t-product-card__cta" aria-hidden="true">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                                            <path d="M5 12h14" />
+                                                                            <path d="M12 5l7 7-7 7" />
+                                                                        </svg>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+
+                                        <div class="g4t-ads-hero__dots" aria-label="Wybierz produkt"></div>
+                                    </section>
+                                </div>
+                            </div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+
+            {% if posts.pagination.pages is not empty %}
+                <nav class="archive-pagination" aria-label="Nawigacja stron archiwum">
+                    {% for page in posts.pagination.pages %}
+                        {% if page.link %}
+                            <a class="archive-pagination__item" href="{{ page.link|e('esc_url') }}">{{ page.title }}</a>
+                        {% else %}
+                            <a class="archive-pagination__item is-active" href="#" aria-current="page">{{ page.title }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </nav>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,319 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    {% set recipe_data = recipe|default(null) %}
+    {% set recipe_hero = recipe_data and recipe_data.hero is defined ? recipe_data.hero : null %}
+    {% set recipe_times = recipe_data and recipe_data.times is defined ? recipe_data.times : {} %}
+    {% set recipe_servings = recipe_data and recipe_data.servings is defined ? recipe_data.servings : {} %}
+    {% set recipe_source = recipe_data and recipe_data.source is defined ? recipe_data.source : {} %}
+    {% set recipe_ingredients = recipe_data and recipe_data.ingredients is defined ? recipe_data.ingredients : [] %}
+    {% set recipe_ingredients_photo_url = recipe_data and recipe_data.ingredients_photo_url is defined ? recipe_data.ingredients_photo_url : '' %}
+    {% set recipe_steps = recipe_data and recipe_data.steps is defined ? recipe_data.steps : [] %}
+    {% set recipe_ads = recipe_data and recipe_data.ads is defined ? recipe_data.ads : {} %}
+    {% set servings_count = recipe_servings.value is not null ? function('intval', recipe_servings.value) : 0 %}
+    {% set source_label = recipe_source.label|default(site.name) %}
+    {% set source_url = recipe_source.url|default(post.link) %}
+    {% set servings_text = recipe_servings.value is not null ? recipe_servings.value ~ (recipe_servings.unit ? ' ' ~ recipe_servings.unit : '') : '' %}
+    {% set servings_person_suffix = servings_count == 1 ? 'osoba' : (servings_count in [2, 3, 4] ? 'osoby' : (servings_count >= 5 ? 'osob' : '')) %}
+    {% set mail_subject = post.title|url_encode %}
+    {% set share_url = post.link|url_encode %}
+    {% set recipe_ads_products = recipe_ads.products|default([]) %}
+    {% set fallback_ads_products = [
+        {
+            'name': 'Pistacje luskane surowe niesolone - 500g',
+            'price': '65,00 zl',
+            'link': 'https://go4taste.pl/pistacje-niesolone-luskane-nieprazone-duze-500g.html',
+            'picture': 'https://go4taste.pl/1655-home_default/pistacje-niesolone-luskane-nieprazone-duze-500g.jpg'
+        },
+        {
+            'name': 'Slonecznik luskany - 1kg',
+            'price': '11,00 zl',
+            'link': 'https://go4taste.pl/slonecznik-luskany.html',
+            'picture': 'https://go4taste.pl/1135-home_default/slonecznik-luskany.jpg'
+        },
+        {
+            'name': 'Imbir mielony - 200g',
+            'price': '8,00 zl',
+            'link': 'https://go4taste.pl/imbir-mielony.html',
+            'picture': 'https://go4taste.pl/1195-home_default/imbir-mielony.jpg'
+        },
+        {
+            'name': 'Cynamon cejlonski mielony - 100g',
+            'price': '11,00 zl',
+            'link': 'https://go4taste.pl/cynamon-cejlonski-mielony.html',
+            'picture': 'https://go4taste.pl/1969-home_default/cynamon-cejlonski-mielony.jpg'
+        }
+    ] %}
+
+    <a class="skip-link screen-reader-text" href="#sidebar-ingredients">Przejdz do skladnikow</a>
+
+    {% if g4t_debug_request and g4t_debug_single %}
+        <section class="site-container" aria-label="Debug single route">
+            <details open>
+                <summary><strong>GO4TASTE DEBUG</strong> (single route)</summary>
+                <pre style="white-space: pre-wrap; overflow:auto; max-height: 360px; background:#111; color:#9ef0a8; padding:12px; border-radius:8px;">{{ function('wp_json_encode', g4t_debug_single, constant('JSON_PRETTY_PRINT')) }}</pre>
+            </details>
+        </section>
+    {% endif %}
+
+    {% if recipes_debug_enabled and recipes_debug_json %}
+        <section class="site-container" aria-label="Debug recipe context">
+            <details open>
+                <summary><strong>GO4TASTE DEBUG</strong> (recipe context)</summary>
+                <pre style="white-space: pre-wrap; overflow:auto; max-height: 420px; background:#111; color:#9ef0a8; padding:12px; border-radius:8px;">{{ recipes_debug_json }}</pre>
+            </details>
+        </section>
+    {% endif %}
+
+    <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
+        Jestes tutaj:
+        <a href="{{ site.url }}">Blog</a> /
+        <a href="{{ site.url }}/przepisy/">Przepisy</a> /
+        {{ post.title }}
+    </nav>
+
+    <section class="recipe-hero recipe-hero--dark" aria-labelledby="recipe-title">
+        <div class="recipe-hero__inner site-container">
+            <div class="recipe-hero__identity">
+                {% set all_taxonomies = [] %}
+                {% for tax_name in ['category', 'post_tag'] %}
+                    {% set terms = post.terms(tax_name) %}
+                    {% if terms %}
+                        {% for term in terms %}
+                            {% set all_taxonomies = all_taxonomies|merge([{link: term.link, name: term.name}]) %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if all_taxonomies %}
+                    <nav class="recipe-hero__tags" aria-label="Kategorie przepisu">
+                        {% for term in all_taxonomies %}
+                            <a class="recipe-hero__tag" href="{{ term.link }}">{{ term.name }}</a>
+                        {% endfor %}
+                    </nav>
+                {% endif %}
+
+                <h1 class="recipe-hero__title" id="recipe-title">{{ post.title }}</h1>
+                {% if recipe_hero and recipe_hero.excerpt %}
+                    <p class="recipe-hero__lead">{{ recipe_hero.excerpt }}</p>
+                {% endif %}
+
+                <div class="recipe-hero__meta" aria-label="Szybkie metryki przepisu">
+                    {% if recipe_data and recipe_data.date is defined and recipe_data.date.value %}
+                        <span class="recipe-hero__pill recipe-hero__pill--date">{{ recipe_data.date.label }}: {{ recipe_data.date.value }}</span>
+                    {% endif %}
+                    {% if recipe_data and recipe_data.difficulty %}
+                        <span class="recipe-hero__pill">Poziom: {{ recipe_data.difficulty }}</span>
+                    {% endif %}
+                    {% if servings_text %}
+                        <span class="recipe-hero__pill">Porcje: {{ servings_text }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="recipe-hero__time" aria-label="Czasy przygotowania">
+                    <div class="recipe-hero__time-item">
+                        <span class="recipe-hero__time-label">Przygotowanie</span>
+                        <span class="recipe-hero__time-value">{{ recipe_times.prep|default('-') }} min</span>
+                    </div>
+                    <div class="recipe-hero__time-item">
+                        <span class="recipe-hero__time-label">Gotowanie</span>
+                        <span class="recipe-hero__time-value">{{ recipe_times.cook|default('-') }} min</span>
+                    </div>
+                    <div class="recipe-hero__time-item">
+                        <span class="recipe-hero__time-label">Calkowity czas</span>
+                        <span class="recipe-hero__time-value">{{ recipe_times.total|default('-') }} min</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="recipe-hero__visual" aria-label="Podglad dania">
+                <figure class="recipe-hero__figure">
+                    {% if recipe_hero and recipe_hero.image %}
+                        <img src="{{ recipe_hero.image|e('esc_url') }}" alt="{{ post.title }}" loading="eager">
+                    {% elseif post.thumbnail %}
+                        <img src="{{ post.thumbnail.src|e('esc_url') }}" alt="{{ post.title }}" loading="eager">
+                    {% endif %}
+                </figure>
+            </aside>
+        </div>
+    </section>
+
+    <nav class="mobile-recipe-tabs site-container" aria-label="Nawigacja po sekcjach przepisu">
+        <button class="mobile-recipe-tabs__button is-active" type="button" data-target="sec-ingredients" aria-pressed="true">Skladniki</button>
+        <button class="mobile-recipe-tabs__button" type="button" data-target="sec-preparation" aria-pressed="false">Przygotowanie</button>
+    </nav>
+
+    <div class="site-container">
+        <div class="recipe-layout">
+            <aside class="recipe-share-rail" aria-label="Udostepnij przepis">
+                <ul class="recipe-share-rail__list">
+                    <li>
+                        <button class="recipe-share-rail__button" type="button" onclick="window.print()" aria-label="Drukuj przepis" title="Drukuj">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M6 9V4h12v5" />
+                                <rect x="6" y="14" width="12" height="6" />
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            </svg>
+                        </button>
+                    </li>
+                    <li>
+                        <a class="recipe-share-rail__link" href="mailto:?subject={{ mail_subject }}&body=Sprawdz%20przepis:%20{{ share_url }}" aria-label="Wyslij mailem" title="Wyslij mailem">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16v16H4z" />
+                                <path d="m22 6-10 7L2 6" />
+                            </svg>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="recipe-share-rail__link" href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}" target="_blank" rel="noopener noreferrer" aria-label="Udostepnij na Facebooku" title="Udostepnij na Facebooku">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M13.5 22v-8.3h2.8l.4-3.2h-3.2V8.4c0-.9.3-1.5 1.6-1.5h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.1 1.5-4.1 4.3v2.4H8v3.2h2.7V22h2.8z" />
+                            </svg>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <main class="recipe-main">
+                <article class="recipe-article">
+                    <section class="recipe-section recipe-section--preparation-box" aria-labelledby="sec-preparation">
+                        <div class="sticky-wrapper">
+                            <h2 id="sec-preparation">Etapy przygotowania</h2>
+                            <ol class="steps-checklist">
+                                {% for step in recipe_steps %}
+                                    <li class="step-item">
+                                        <label class="step-row" for="step-{{ loop.index }}">
+                                            <input id="step-{{ loop.index }}" class="step-check" type="checkbox" aria-label="Oznacz krok {{ loop.index }} jako wykonany">
+                                            <div class="step-content">
+                                                {% if step.title is defined and step.title %}
+                                                    <span class="step-title">{{ step.title }}</span>
+                                                {% else %}
+                                                    <span class="step-title">Krok {{ loop.index }}</span>
+                                                {% endif %}
+
+                                                {% if step.description is defined %}
+                                                    {% set step_description_lines = step.description|replace({"\r\n": "\n", "\r": "\n"})|split('\n') %}
+                                                    <div class="step-text">
+                                                        {% for line in step_description_lines %}
+                                                            {% set line_text = line|trim %}
+                                                            {% if line_text %}
+                                                                <p>{{ line_text }}</p>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <div class="step-text"><p>{{ step }}</p></div>
+                                                {% endif %}
+
+                                                {% if step.tip is defined and step.tip %}
+                                                    <div class="step-tip">Wskazowka: {{ step.tip }}</div>
+                                                {% endif %}
+
+                                                {% if step.images is defined and step.images %}
+                                                    {% for image_url in step.images %}
+                                                        <figure class="step-media">
+                                                            <img src="{{ image_url|e('esc_url') }}" alt="{{ step.title is defined and step.title ? step.title : ('Krok ' ~ loop.parent.loop.index) }}" loading="lazy">
+                                                        </figure>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </label>
+                                    </li>
+                                {% else %}
+                                    <li class="step-item">
+                                        <div class="step-content"><div class="step-text"><p>Brak krokow przygotowania.</p></div></div>
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </section>
+
+                    <section class="recipe-section" aria-labelledby="sec-tips" data-optional-section>
+                        <h2 id="sec-tips">Wskazowki</h2>
+                        <div class="recipe-tips" data-optional-content>{{ recipe_data.tips|default('') }}</div>
+                    </section>
+
+                    <section class="recipe-section recipe-section--source" aria-labelledby="sec-source">
+                        <h2 id="sec-source">Zrodlo przepisu</h2>
+                        <p><a href="{{ source_url|e('esc_url') }}" target="_blank" rel="noopener noreferrer">{{ source_label }}</a></p>
+                    </section>
+                </article>
+            </main>
+
+            <aside class="recipe-sidebar recipe-sidebar--sticky" id="sidebar-ingredients" aria-label="Skladniki przepisu">
+                <div class="sticky-wrapper">
+                    <section class="recipe-section recipe-section--ingredients" aria-labelledby="sec-ingredients">
+                        <h2 id="sec-ingredients">Skladniki</h2>
+                        {% if recipe_ingredients_photo_url %}
+                            <figure class="ingredients-photo">
+                                <img src="{{ recipe_ingredients_photo_url }}" alt="Przygotowane skladniki" loading="lazy">
+                            </figure>
+                        {% endif %}
+                        <p class="recipe-servings">Porcja: <strong>{{ servings_text ? servings_text ~ (servings_person_suffix ? ' ' ~ servings_person_suffix : '') : 'brak danych' }}</strong></p>
+                        <ul class="ingredients-list">
+                            {% for ingredient in recipe_ingredients %}
+                                <li class="ingredient-item">
+                                    <label class="ingredient-row" for="ing-{{ loop.index }}">
+                                        <input id="ing-{{ loop.index }}" class="ingredient-check" type="checkbox">
+                                        <span class="ingredient-text">
+                                            <span class="ingredient-name">{{ ingredient.name }}</span>
+                                            <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
+                                        </span>
+                                    </label>
+                                </li>
+                            {% else %}
+                                <li class="ingredient-item">Brak skladnikow.</li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </div>
+            </aside>
+        </div>
+
+        <section class="g4t-ads-strip" aria-labelledby="g4t-ads-title" data-g4t-ads>
+            <div class="g4t-ads-strip__top">
+                <div class="g4t-ads-strip__text">
+                    <div class="g4t-ads-strip__brand-row">
+                        <p class="g4t-ads-strip__brand">GO4TASTE.PL</p>
+                        <span class="g4t-ads-strip__promo-badge">Autopromocja</span>
+                    </div>
+                    <h2 id="g4t-ads-title" class="g4t-ads-strip__title">Produkty ze sklepu</h2>
+                    <p class="g4t-ads-strip__desc">Skladniki dostepne w naszym sklepie</p>
+                </div>
+                <div class="g4t-ads-strip__nav-group">
+                    <button type="button" class="g4t-ads__nav g4t-ads__nav--prev" aria-label="Poprzednie produkty" data-g4t-ads-prev><span aria-hidden="true">&#8592;</span></button>
+                    <button type="button" class="g4t-ads__nav g4t-ads__nav--next" aria-label="Nastepne produkty" data-g4t-ads-next><span aria-hidden="true">&#8594;</span></button>
+                </div>
+            </div>
+
+            <div class="g4t-ads">
+                <div class="g4t-ads__viewport" tabindex="0" role="group" aria-label="Lista promowanych produktow" data-g4t-ads-viewport>
+                    <ul class="g4t-ads__track" data-g4t-ads-track>
+                        {% for product_data in recipe_ads_products|length ? recipe_ads_products : fallback_ads_products %}
+                            <li class="g4t-product-card">
+                                <a class="g4t-product-card__link" href="{{ product_data.link|e('esc_url') }}">
+                                    <figure class="g4t-product-card__figure">
+                                        <img class="g4t-product-card__image" src="{{ product_data.picture|e('esc_url') }}" alt="{{ product_data.name }}" loading="lazy">
+                                    </figure>
+                                    <div class="g4t-product-card__info">
+                                        <div class="g4t-product-card__top">
+                                            <h3 class="g4t-product-card__title">{{ product_data.name }}</h3>
+                                        </div>
+                                        <div class="g4t-product-card__bottom">
+                                            <p class="g4t-product-card__price">{{ product_data.price }}</p>
+                                            <span class="g4t-product-card__cta" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

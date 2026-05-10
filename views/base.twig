@@ -1,0 +1,31 @@
+{% block html_head_container %}
+
+{% include 'html-header.twig' %}
+	{% block head %}
+	{% endblock %}
+	</head>
+{% endblock %}
+
+	<body class="{{body_class}}" data-template="base.twig">
+		{{ function('wp_body_open') }}
+		<a class="skip-link screen-reader-text" href="#main-content">Przejdz do tresci</a>
+		<header class="site-header">
+			{% block header %}
+				{% include 'partial/site-header.twig' %}
+			{% endblock %}
+		</header>
+
+		<main id="main-content">
+				{% block content %}
+					Sorry, no content
+				{% endblock %}
+		</main>
+
+		{% block footer %}
+			<footer class="site-footer" id="footer">
+				{% include 'partial/site-footer.twig' %}
+			</footer>
+			{{ function('wp_footer') }}
+		{% endblock %}
+	</body>
+</html>
