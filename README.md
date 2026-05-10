@@ -60,3 +60,37 @@ Before each production deployment:
 6. Push release commit to `main`.
 7. Deploy full theme directory, including `vendor/`.
 8. After deploy, open one recipe page and confirm no PHP fatal errors.
+
+## Release Notes Template
+
+Use this template for each new tag/release:
+
+```md
+# go4taste-recipes-theme vX.Y.Z
+
+Release date: YYYY-MM-DD
+Tag: vX.Y.Z
+
+## Summary
+- Short description of the release purpose.
+
+## Added
+- New feature A
+- New feature B
+
+## Changed
+- Updated behavior A
+- Updated styling B
+
+## Fixed
+- Bug fix A
+- Bug fix B
+
+## Deployment Notes
+- Deployment mode: no Composer on server.
+- Confirm `vendor/` and `composer.lock` are included in deployed files.
+- Smoke test: home, archive, single recipe.
+
+## Rollback
+- Roll back to previous tag: `git checkout <previous-tag>`
+```
