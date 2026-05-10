@@ -36,3 +36,14 @@ Small tip: You can make use of Composer’s [autoloading functionality](https://
 * [Timber and Twig Reignited My Love for WordPress](https://css-tricks.com/timber-and-twig-reignited-my-love-for-wordpress/) on CSS-Tricks
 * [A real live Timber theme](https://github.com/laras126/yuling-theme).
 * [Timber Video Tutorials](http://timber.github.io/timber/#video-tutorials) and [an incomplete set of screencasts](https://www.youtube.com/playlist?list=PLuIlodXmVQ6pkqWyR6mtQ5gQZ6BrnuFx-) for building a Timber theme from scratch.
+
+## Deployment without Composer
+
+This repository is configured for servers where Composer is not available during deployment.
+
+1. Keep `vendor/` in the repository and deploy it together with the theme files.
+2. Keep `composer.lock` in the repository to preserve reproducible dependency versions.
+3. Deploy the full theme directory as-is (including `vendor/`) to `wp-content/themes/go4taste-recipes-theme/`.
+4. Do not run `composer install` on the production server.
+
+Reason: `functions.php` loads `vendor/autoload.php` directly, so missing `vendor/` will cause a fatal error.
