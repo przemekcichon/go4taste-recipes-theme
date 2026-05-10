@@ -76,7 +76,7 @@
         <div class="recipe-hero__inner site-container">
             <div class="recipe-hero__identity">
                 {% set all_taxonomies = [] %}
-                {% for tax_name in ['category', 'post_tag'] %}
+                {% for tax_name in ['category', 'post_tag', 'recipe_meal_type', 'recipe_prep_time_range', 'recipe_feature', 'recipe_ingredient'] %}
                     {% set terms = post.terms(tax_name) %}
                     {% if terms %}
                         {% for term in terms %}
