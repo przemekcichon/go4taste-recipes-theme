@@ -37,4 +37,11 @@ if ( is_day() ) {
 
 $context['posts'] = Timber::get_posts();
 
+$use_recipe_archive_template = apply_filters( 'go4taste/recipes/use_archive_template', false, get_queried_object() );
+if ( $use_recipe_archive_template ) {
+	array_unshift( $templates, 'archive-recipe.twig' );
+}
+
+$context = apply_filters( 'go4taste/recipes/context/archive', $context, array( 'scope' => 'archive-template-fallback' ) );
+
 Timber::render( $templates, $context );
