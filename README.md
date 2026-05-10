@@ -47,3 +47,16 @@ This repository is configured for servers where Composer is not available during
 4. Do not run `composer install` on the production server.
 
 Reason: `functions.php` loads `vendor/autoload.php` directly, so missing `vendor/` will cause a fatal error.
+
+## Release Checklist (No Composer on Server)
+
+Before each production deployment:
+
+1. Confirm repository is clean: `git status`.
+2. Pull latest changes: `git pull --ff-only`.
+3. Verify `vendor/` exists and includes `autoload.php`.
+4. Verify `composer.lock` is present in the commit.
+5. Smoke test key templates locally (home, archive, single recipe).
+6. Push release commit to `main`.
+7. Deploy full theme directory, including `vendor/`.
+8. After deploy, open one recipe page and confirm no PHP fatal errors.
