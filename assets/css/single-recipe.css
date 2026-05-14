@@ -75,6 +75,13 @@
     outline-offset: 2px;
 }
 
+.ingredient-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
 .ingredient-text {
     align-items: baseline;
     display: flex;
@@ -91,6 +98,17 @@
     font-size: 0.9rem;
 }
 
+.ingredient-note {
+    color: var(--c-meta);
+    display: block;
+    font-size: 0.82rem;
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 2px;
+}
+
+.ingredient-check:checked + .ingredient-content .ingredient-name,
+.ingredient-check:checked + .ingredient-content .ingredient-amount,
 .ingredient-check:checked + .ingredient-text .ingredient-name,
 .ingredient-check:checked + .ingredient-text .ingredient-amount {
     color: #9a9a9a;
@@ -413,6 +431,7 @@
     .recipe-servings,
     .ingredient-name,
     .ingredient-amount,
+    .ingredient-note,
     .step-title,
     .step-text,
     .step-tip,

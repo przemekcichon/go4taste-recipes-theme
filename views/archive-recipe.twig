@@ -3,6 +3,25 @@
 {% block content %}
     {% set archive_title = recipe_archive.title|default(title|default('Przepisy')) %}
     {% set archive_description = recipe_archive.description|default('Zbior przepisow w stylu go4taste.') %}
+    
+    {# Hero data from ACF taxonomy term meta (fallback to defaults if not set) #}
+    {% set hero = recipe_archive.hero|default({}) %}
+    {% set hero_title_suffix = hero.title_suffix|default(archive_title) %}
+    {% set hero_description = hero.short_description|default(archive_description) %}
+    {% set hero_claim = hero.short_claim|default('') %}
+    {% set hero_icon = hero.icon|default(null) %}
+    {% set hero_image = hero.hero_image|default(null) %}
+    {% set hero_blog_posts = hero.blog_posts|default([]) %}
+    
+    {# Get taxonomy name dynamically from queried object #}
+    {% set taxonomy_name = '' %}
+    {% if term is defined and term.taxonomy is defined %}
+        {% set taxonomy_obj = fn('get_taxonomy', term.taxonomy) %}
+        {% if taxonomy_obj %}
+            {% set taxonomy_name = taxonomy_obj.labels.singular_name|default(taxonomy_obj.labels.name|default('')) %}
+        {% endif %}
+    {% endif %}
+    
     {% set sample_ads_products = [
         {
             'name': 'Pistacje luskane surowe niesolone - 500g',
@@ -33,12 +52,21 @@
     <div class="g4t-archive-hero-shell" data-g4t-archive-hero>
         <div class="g4t-archive-hero-grid site-container">
             <div class="g4t-archive-hero-identity">
-                <p class="g4t-archive-hero-eyebrow">Skladnik</p>
+                {% if taxonomy_name %}
+                    <p class="g4t-archive-hero-eyebrow">
+                        {% if hero_icon %}
+                            <img class="g4t-archive-hero-eyebrow__icon" src="{{ hero_icon.url|e('esc_url') }}" alt="{{ hero_icon.alt|default('') }}" width="14" height="14" aria-hidden="true">
+                        {% endif %}
+                        {{ taxonomy_name }}
+                    </p>
+                {% endif %}
+                
                 <h1 class="g4t-archive-hero-title">
                     <span class="g4t-archive-hero-title__line1">Przepisy</span>
-                    <span class="g4t-archive-hero-title__line2">{{ archive_title }}</span>
+                    <span class="g4t-archive-hero-title__line2">{{ hero_title_suffix }}</span>
                 </h1>
-                <p class="g4t-archive-hero-lead">{{ archive_description }}</p>
+                
+                <p class="g4t-archive-hero-lead">{{ hero_description }}</p>
 
                 <ul class="g4t-archive-hero-stats" aria-label="Charakterystyka zbioru przepisow">
                     <li class="g4t-archive-hero-stats__item">
@@ -57,9 +85,54 @@
             </div>
 
             <div class="g4t-archive-hero-visual">
+                <div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--outer"></div>
+                <div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--inner"></div>
                 <div class="g4t-archive-hero-visual__photo-wrap">
-                    <img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Pistacje luskane" loading="eager">
+                    {% if hero_image %}
+                        <img class="g4t-archive-hero-visual__photo" src="{{ hero_image.url|e('esc_url') }}" alt="{{ hero_image.alt|default(hero_title_suffix) }}" loading="eager">
+                    {% else %}
+                        <img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Pistacje luskane" loading="eager">
+                    {% endif %}
                 </div>
+                
+                {% if hero_claim %}
+                    <div class="g4t-archive-hero-visual__label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M3 12h18" />
+                            <path d="M5 8h14" />
+                            <path d="M7 16h10" />
+                        </svg>
+                        {{ hero_claim }}
+                    </div>
+                {% endif %}
+                
+                {% if hero_blog_posts is not empty %}
+                    <div class="g4t-archive-hero-blog-slider g4t-archive-hero-visual__blog-slider" data-g4t-archive-hero-blog-slider>
+                        <div class="g4t-archive-hero-visual__blog-viewport" tabindex="0" aria-label="Polecane artykuly z bloga">
+                            <ul class="g4t-archive-hero-visual__blog-track">
+                                {% for blog_post in hero_blog_posts %}
+                                    <li class="g4t-archive-hero-visual__blog-slide">
+                                        <div class="g4t-archive-hero-visual__blog-link-wrap">
+                                            <a class="g4t-archive-hero-visual__blog-link" href="{{ blog_post.url|e('esc_url') }}"
+                                                target="_blank" rel="noopener noreferrer">
+                                                <span class="g4t-archive-hero-visual__blog-link-badge" aria-hidden="true">Czytaj</span>
+                                                <span>{{ blog_post.title }}</span>
+                                                <svg class="g4t-archive-hero-visual__blog-link-arrow" xmlns="http://www.w3.org/2000/svg" width="13"
+                                                    height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="g4t-ads-hero__dots g4t-archive-hero-visual__blog-dots" aria-label="Wybierz artykul"></div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -76,7 +76,7 @@
         <div class="recipe-hero__inner site-container">
             <div class="recipe-hero__identity">
                 {% set all_taxonomies = [] %}
-                {% for tax_name in ['category', 'post_tag'] %}
+                {% for tax_name in ['category', 'post_tag', 'recipe_meal_type', 'recipe_prep_time_range', 'recipe_feature'] %}
                     {% set terms = post.terms(tax_name) %}
                     {% if terms %}
                         {% for term in terms %}
@@ -255,10 +255,20 @@
                                 <li class="ingredient-item">
                                     <label class="ingredient-row" for="ing-{{ loop.index }}">
                                         <input id="ing-{{ loop.index }}" class="ingredient-check" type="checkbox">
-                                        <span class="ingredient-text">
-                                            <span class="ingredient-name">{{ ingredient.name }}</span>
-                                            <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
-                                        </span>
+                                        {% if ingredient.ingredient_note %}
+                                            <span class="ingredient-content">
+                                                <span class="ingredient-text">
+                                                    <span class="ingredient-name">{{ ingredient.name }}</span>
+                                                    <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
+                                                </span>
+                                                <span class="ingredient-note">{{ ingredient.ingredient_note }}</span>
+                                            </span>
+                                        {% else %}
+                                            <span class="ingredient-text">
+                                                <span class="ingredient-name">{{ ingredient.name }}</span>
+                                                <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
+                                            </span>
+                                        {% endif %}
                                     </label>
                                 </li>
                             {% else %}

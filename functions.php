@@ -179,6 +179,31 @@ function go4taste_recipes_theme_enqueue_assets() {
 add_action( 'wp_enqueue_scripts', 'go4taste_recipes_theme_enqueue_assets', 30 );
 
 /**
+ * Enable SVG uploads for ACF taxonomy term icons.
+ */
+function go4taste_recipes_theme_enable_svg_upload( array $mimes ): array {
+	$mimes['svg']  = 'image/svg+xml';
+	$mimes['svgz'] = 'image/svg+xml';
+
+	return $mimes;
+}
+add_filter( 'upload_mimes', 'go4taste_recipes_theme_enable_svg_upload' );
+
+/**
+ * Fix MIME type check for SVG uploads.
+ */
+function go4taste_recipes_theme_fix_svg_mime_check( $data, $file, $filename, $mimes ) {
+	$filetype = wp_check_filetype( $filename, $mimes );
+
+	return [
+		'ext'             => $filetype['ext'],
+		'type'            => $filetype['type'],
+		'proper_filename' => $data['proper_filename'],
+	];
+}
+add_filter( 'wp_check_filetype_and_ext', 'go4taste_recipes_theme_fix_svg_mime_check', 10, 4 );
+
+/**
  * Add prototype theme class required by design assets.
  */
 function go4taste_recipes_theme_body_class( array $classes ): array {
