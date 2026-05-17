@@ -7,7 +7,7 @@
     {# Hero data from ACF taxonomy term meta (fallback to defaults if not set) #}
     {% set hero = recipe_archive.hero|default({}) %}
     {% set hero_title_suffix = hero.title_suffix|default(archive_title) %}
-    {% set hero_description = hero.short_description|default(archive_description) %}
+    {% set hero_description = hero.description|default(archive_description) %}
     {% set hero_claim = hero.short_claim|default('') %}
     {% set hero_icon = hero.icon|default(null) %}
     {% set hero_image = hero.hero_image|default(null) %}
