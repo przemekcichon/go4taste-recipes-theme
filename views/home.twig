@@ -36,6 +36,9 @@
 
         <ul class="home-recipe-grid">
             {% for post_item in posts %}
+                {% if loop.index > 10 %}
+                    {% break %}
+                {% endif %}
                 <li class="home-recipe-card">
                     <a href="{{ post_item.link|e('esc_url') }}">
                         {% if post_item.thumbnail %}

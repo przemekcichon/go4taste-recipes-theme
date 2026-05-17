@@ -82,6 +82,17 @@
                         <span class="g4t-archive-hero-stats__label">poziomy trudnosci</span>
                     </li>
                 </ul>
+                
+                {% if term and term.taxonomy %}
+                    {% set related_terms = fn('get_terms', term.taxonomy, {'exclude': term.id, 'number': 10}) %}
+                    {% if related_terms and related_terms is not empty %}
+                        <div class="g4t-archive-hero-tags" aria-label="Pozostale kategorie w zbiorze">
+                            {% for related_term in related_terms %}
+                                <a class="g4t-archive-hero-tag" href="{{ related_term.link|e('esc_url') }}">{{ related_term.name }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
             </div>
 
             <div class="g4t-archive-hero-visual">
