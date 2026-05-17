@@ -141,7 +141,7 @@
         <section class="archive-results" aria-labelledby="archive-results-title">
             <div class="archive-results__head">
                 <h2 id="archive-results-title">{{ archive_title }}</h2>
-                <p class="archive-results__count">{{ posts.pagination.total|default(posts|length) }} przepisow</p>
+                <p class="archive-results__count">{{ recipe_archive.total_posts|default(posts|length) }} przepisów</p>
             </div>
 
             <ul class="recipe-archive-grid">
