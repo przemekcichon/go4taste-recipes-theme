@@ -144,7 +144,9 @@
 
 .recipe-teaser-card {
     border: 1px solid var(--c-border);
+    border-radius: 10px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .recipe-teaser-card__link {
@@ -166,7 +168,7 @@
     flex: 1;
     flex-direction: column;
     gap: 10px;
-    padding: 14px;
+    padding: 12px;
 }
 
 .recipe-teaser-card__body h3 {
@@ -181,14 +183,12 @@
 }
 
 .recipe-teaser-card__meta {
-    border-top: 1px solid var(--c-border);
     color: var(--c-meta);
     display: flex;
     font-size: 0.7rem;
     gap: 10px;
     letter-spacing: 0.1em;
     margin-top: auto;
-    padding-top: 10px;
     text-transform: uppercase;
 }
 
