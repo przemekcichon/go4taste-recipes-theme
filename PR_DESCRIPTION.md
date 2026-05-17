@@ -1,53 +1,87 @@
-# Fix archive hero description key after plugin taxonomy update
+# Update archive recipe cards styling and disable ads temporarily
 
 ## Summary
 
-This PR aligns the archive hero template with the plugin change that moved taxonomy hero description from `short_description` (ACF term meta) to `description` (native term description source in plugin context).
-
-Without this update, archive hero lead text may fall back incorrectly because the theme reads the old key.
+This PR updates the archive recipes listing to match the current `home.twig` design system:
+- Adds rounded corners to recipe cards (10px border-radius)
+- Temporarily disables the in-grid ads promo block
+- Cleans up recipe card meta styling for consistency
 
 ## Motivation
 
-- Plugin context now exposes `recipe_archive.hero.description`.
-- Theme template was still reading `recipe_archive.hero.short_description`.
-- Result: mismatch between plugin data contract and theme rendering.
+The archive recipe cards should align visually with the homepage recipe grid. The current implementation lacks rounded corners and has visual clutter in the meta section. Ads module needs reorganization before re-enabling on archives.
 
 ## Changes
 
-### Template mapping update
+### 1. Twig: Disable ads block
 
-File: `views/archive-recipe.twig`
+File: `views/archive-recipe.twig` (lines ~165–209)
 
-- Updated one line:
-  - from: `hero.short_description`
-  - to: `hero.description`
+- Wrapped the `{% if loop.index == 3 %}` ads insertion block in comments
+- Will be re-enabled in a separate phase after ads strategy finalization
+- Recipe grid now displays only recipe cards, no promotional content
 
-```twig
-{% set hero_description = hero.description|default(archive_description) %}
-```
+### 2. CSS: Add card border-radius
+
+File: `assets/css/archive-recipes.css`
+
+**`.recipe-teaser-card`**:
+- Added `border-radius: 10px` (matches `home.recipe-card`)
+- Added `overflow: hidden` to ensure image corners respect border-radius
+
+**`.recipe-teaser-card__body`**:
+- Changed `padding: 14px` → `padding: 12px` (consistency with home.twig)
+
+**`.recipe-teaser-card__meta`**:
+- Removed `border-top: 1px solid var(--c-border)` (cleaner layout)
+- Removed `padding-top: 10px` (margin collapse with border removal)
+- Simplified spacing — meta now blends seamlessly with card footer
 
 ## Validation
 
-### Functional check
+### Visual check
 
-1. Open taxonomy archive page (e.g. `/typ-dania/przystawka`).
-2. Ensure term has native taxonomy description in wp-admin.
-3. Confirm hero lead renders the expected description text.
+1. Open taxonomy archive page (e.g., `/typ-dania/przystawka`).
+2. Verify:
+   - ✅ Recipe cards have rounded corners (10px on all 4 sides)
+   - ✅ No ads block rendered (grid contains only recipe cards)
+   - ✅ Meta line at bottom has no horizontal separator
+   - ✅ Padding inside card body feels balanced (12px)
 
-### Scope check
+### Responsive check
 
-- Only one template file changed.
-- No CSS, JS, or PHP logic changes.
+- Desktop (3 columns): All cards rounded
+- Tablet (2 columns): Cards still use border-radius correctly
+- Mobile (1 column): Cards responsive, corners visible
+
+### Browser check
+
+- Chrome, Firefox, Safari — border-radius support universal
+- No fallback needed
 
 ## Backward compatibility
 
-- Safe with current plugin contract.
-- If plugin context provides `hero.description`, template renders correctly.
-- Fallback remains: `archive_description`.
+- Safe change: only CSS styling and template comment.
+- Recipe card markup unchanged (just styling updates).
+- Meta still functional, visual only.
+- Ads block commented, not deleted — easily restored.
 
 ## Risks
 
-- Minimal. Pure key mapping update in Twig template.
+- **Low**: Pure styling update + temporary feature disable.
+- No data loss, no logic changes.
+- Ads removal is temporary and documented in Twig comment.
+
+## Future work
+
+- Re-integrate ads with finalized placement strategy in separate PR
+- Consider `loop.index` threshold adjustment if needed (currently 3)
+- Align ads visual treatment with updated card styling
+
+## Related issues
+
+- Aligns archive UX with home.twig reference design
+- Cleans up temporary ads infrastructure for later refactor
 
 ## Rollback
 
