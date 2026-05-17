@@ -88,7 +88,7 @@
                     {% if related_terms and related_terms is not empty %}
                         <div class="g4t-archive-hero-tags" aria-label="Pozostale kategorie w zbiorze">
                             {% for related_term in related_terms %}
-                                <a class="g4t-archive-hero-tag" href="{{ related_term.link|e('esc_url') }}">{{ related_term.name }}</a>
+                                <a class="g4t-archive-hero-tag" href="{{ fn('get_term_link', related_term)|e('esc_url') }}">{{ related_term.name }}</a>
                             {% endfor %}
                         </div>
                     {% endif %}
