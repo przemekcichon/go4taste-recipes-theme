@@ -18,32 +18,6 @@
     {% set mail_subject = post.title|url_encode %}
     {% set share_url = post.link|url_encode %}
     {% set recipe_ads_products = recipe_ads.products|default([]) %}
-    {% set fallback_ads_products = [
-        {
-            'name': 'Pistacje luskane surowe niesolone - 500g',
-            'price': '65,00 zl',
-            'link': 'https://go4taste.pl/pistacje-niesolone-luskane-nieprazone-duze-500g.html',
-            'picture': 'https://go4taste.pl/1655-home_default/pistacje-niesolone-luskane-nieprazone-duze-500g.jpg'
-        },
-        {
-            'name': 'Slonecznik luskany - 1kg',
-            'price': '11,00 zl',
-            'link': 'https://go4taste.pl/slonecznik-luskany.html',
-            'picture': 'https://go4taste.pl/1135-home_default/slonecznik-luskany.jpg'
-        },
-        {
-            'name': 'Imbir mielony - 200g',
-            'price': '8,00 zl',
-            'link': 'https://go4taste.pl/imbir-mielony.html',
-            'picture': 'https://go4taste.pl/1195-home_default/imbir-mielony.jpg'
-        },
-        {
-            'name': 'Cynamon cejlonski mielony - 100g',
-            'price': '11,00 zl',
-            'link': 'https://go4taste.pl/cynamon-cejlonski-mielony.html',
-            'picture': 'https://go4taste.pl/1969-home_default/cynamon-cejlonski-mielony.jpg'
-        }
-    ] %}
 
     <a class="skip-link screen-reader-text" href="#sidebar-ingredients">Przejdz do skladnikow</a>
 
@@ -280,6 +254,7 @@
             </aside>
         </div>
 
+        {% if recipe_ads_products|length %}
         <section class="g4t-ads-strip" aria-labelledby="g4t-ads-title" data-g4t-ads>
             <div class="g4t-ads-strip__top">
                 <div class="g4t-ads-strip__text">
@@ -299,7 +274,7 @@
             <div class="g4t-ads">
                 <div class="g4t-ads__viewport" tabindex="0" role="group" aria-label="Lista promowanych produktow" data-g4t-ads-viewport>
                     <ul class="g4t-ads__track" data-g4t-ads-track>
-                        {% for product_data in recipe_ads_products|length ? recipe_ads_products : fallback_ads_products %}
+                        {% for product_data in recipe_ads_products %}
                             <li class="g4t-product-card">
                                 <a class="g4t-product-card__link" href="{{ product_data.link|e('esc_url') }}">
                                     <figure class="g4t-product-card__figure">
@@ -325,5 +300,6 @@
                 </div>
             </div>
         </section>
+        {% endif %}
     </div>
 {% endblock %}
