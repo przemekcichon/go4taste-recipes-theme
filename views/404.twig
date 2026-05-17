@@ -1,5 +1,23 @@
 {% extends "base.twig" %}
 
 {% block content %}
-	Sorry, we couldn't find what you're looking for.
+	<section class="g4t-archive-hero-shell g4t-404-hero" aria-labelledby="not-found-title">
+		<div class="g4t-archive-hero-grid site-container">
+			<div class="g4t-archive-hero-identity">
+				<h1 class="g4t-archive-hero-title" id="not-found-title">
+					<span class="g4t-archive-hero-title__line1">404</span>
+					<span class="g4t-archive-hero-title__line2">Nie znaleziono strony</span>
+				</h1>
+				<p class="g4t-archive-hero-lead">Przepraszamy, ale podana strona nie istnieje lub została przeniesiona. Spróbuj wrócić na stronę główną lub skorzystaj z wyszukiwarki przepisów.</p>
+				<a href="/" class="g4t-archive-hero-tag" style="margin-top:1.5rem; display:inline-block;">Przejdź do strony głównej</a>
+			</div>
+			<div class="g4t-archive-hero-visual">
+				<div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--outer"></div>
+				<div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--inner"></div>
+				<div class="g4t-archive-hero-visual__photo-wrap">
+					<img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Granola z pistacjami" loading="eager">
+				</div>
+			</div>
+		</div>
+	</section>
 {% endblock %}

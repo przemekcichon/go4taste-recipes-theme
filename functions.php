@@ -462,8 +462,9 @@ function go4taste_recipes_theme_enqueue_assets() {
 	$is_recipe_single = is_singular( $source_post_type );
 	$is_recipe_archive = is_post_type_archive( $source_post_type ) || ( is_archive() && $use_recipe_archive_template );
 	$is_recipe_home = is_home() || is_front_page();
+	$is_404 = is_404();
 
-	if ( ! $is_recipe_single && ! $is_recipe_archive && ! $is_recipe_home ) {
+	if ( ! $is_recipe_single && ! $is_recipe_archive && ! $is_recipe_home && ! $is_404 ) {
 		return;
 	}
 
@@ -545,7 +546,7 @@ function go4taste_recipes_theme_enqueue_assets() {
 		);
 	}
 
-	if ( $is_recipe_archive || $is_recipe_home ) {
+	if ( $is_recipe_archive || $is_recipe_home || $is_404 ) {
 		wp_enqueue_style(
 			'go4taste-recipes-archive',
 			$base_uri . '/css/archive-recipes.css',
