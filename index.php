@@ -18,6 +18,7 @@ $context = Timber::context();
 if ( is_home() || is_front_page() ) {
 	$home_query_args = apply_filters( 'go4taste/recipes/home_query_args', array() );
 	$context['posts'] = Timber::get_posts( $home_query_args );
+	$context         = apply_filters( 'go4taste/recipes/context/home', $context, array() );
 } else {
 	$context['posts'] = Timber::get_posts();
 }

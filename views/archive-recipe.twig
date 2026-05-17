@@ -3,6 +3,9 @@
 {% block content %}
     {% set archive_title = recipe_archive.title|default(title|default('Przepisy')) %}
     {% set archive_description = recipe_archive.description|default('Zbior przepisow w stylu go4taste.') %}
+    {% set facetwp_enabled = recipes.facetwp_available|default(false) %}
+    {% set facetwp_prefix = recipes.facetwp_prefix|default('g4t_') %}
+    {% set current_url = fn('go4taste_recipes_theme_current_url') %}
     {# Hero data from ACF taxonomy term meta (fallback to defaults if not set) #}
     {% set hero = recipe_archive.hero|default({}) %}
     {% set hero_title_suffix = hero.title_suffix|default(archive_title) %}
@@ -69,7 +72,11 @@
 
                 <ul class="g4t-archive-hero-stats" aria-label="Charakterystyka zbioru przepisow">
                     <li class="g4t-archive-hero-stats__item">
-                        <span class="g4t-archive-hero-stats__value">{{ term.count }}</span>
+                        {% if posts.found_posts is defined and posts.found_posts != term.count %}
+                            <span class="g4t-archive-hero-stats__value">{{ posts.found_posts }} / {{ term.count }}</span>
+                        {% else %}
+                            <span class="g4t-archive-hero-stats__value">{{ term.count }}</span>
+                        {% endif %}
                         <span class="g4t-archive-hero-stats__label">przepisow</span>
                     </li>
                     <li class="g4t-archive-hero-stats__item">
@@ -84,8 +91,15 @@
                 {% if term is defined and term %}
                     {% set current_term_link = fn('get_term_link', term) %}
                     {% if not fn('is_wp_error', current_term_link) %}
-                        <div class="g4t-archive-hero-tags" aria-label="Aktualna kategoria">
+                        <div class="g4t-archive-hero-tags" aria-label="Aktualna kategoria i aktywne filtry">
                             <a class="g4t-archive-hero-tag" href="{{ current_term_link|e('esc_url') }}">{{ term.name }}</a>
+                            {% for filter_tag in recipe_archive.active_filter_tags|default([]) %}
+                                {% if filter_tag.url %}
+                                    <a class="g4t-archive-hero-tag g4t-archive-hero-tag--filter" href="{{ filter_tag.url|e('esc_url') }}">{{ filter_tag.name }}</a>
+                                {% else %}
+                                    <span class="g4t-archive-hero-tag g4t-archive-hero-tag--filter">{{ filter_tag.name }}</span>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                     {% endif %}
                 {% endif %}
@@ -144,14 +158,22 @@
         </div>
     </div>
 
-    <div class="site-container ingredient-archive">
+    <div class="site-container ingredient-archive recipe-listing-shell"
+        data-facetwp-enabled="{{ facetwp_enabled ? 'true' : 'false' }}"
+        data-base-url="{{ fn('home_url', '/przepisy/')|e('esc_url') }}"
+        data-current-url="{{ current_url|e('esc_url') }}"
+        data-facetwp-prefix="{{ facetwp_prefix|e('html_attr') }}">
         <section class="archive-results" aria-labelledby="archive-results-title">
             <div class="archive-results__head">
                 <h2 id="archive-results-title">{{ archive_title }}</h2>
-                <p class="archive-results__count">{{ term.count }} przepisów</p>
+                {% if posts.found_posts is defined and posts.found_posts != term.count %}
+                    <p class="archive-results__count">{{ posts.found_posts }} / {{ term.count }} przepisów</p>
+                {% else %}
+                    <p class="archive-results__count">{{ term.count }} przepisów</p>
+                {% endif %}
             </div>
 
-            <ul class="recipe-archive-grid">
+            <ul class="recipe-archive-grid facetwp-template">
                 {% for post_item in posts %}
                     <li class="recipe-teaser-card">
                         <a href="{{ post_item.link|e('esc_url') }}" class="recipe-teaser-card__link">
