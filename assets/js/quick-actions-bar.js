@@ -23,6 +23,7 @@
     var storageKey = "g4t-theme-mode";
     var recipeActionsBreakpoint = 980;
     var cardData = [];
+    var initialArchiveCountText = null;
     var hasArchiveGrid = false;
     var hasSingleRecipePage = false;
     var showRecipeQuickActions = false;
@@ -363,6 +364,12 @@
     function renderCount(visibleCount) {
         var countNode = document.querySelector(".archive-results__count");
         if (!countNode) {
+            return;
+        }
+
+        // Keep server-rendered total when no local filters are active.
+        if (countActiveFilters() === 0 && initialArchiveCountText !== null) {
+            countNode.textContent = initialArchiveCountText;
             return;
         }
 
@@ -795,6 +802,11 @@
     }
 
     if (hasArchiveGrid) {
+        var initialCountNode = document.querySelector(".archive-results__count");
+        if (initialCountNode) {
+            initialArchiveCountText = initialCountNode.textContent.trim();
+        }
+
         extractCardData();
         buildFilterPanel();
         applyFilters();

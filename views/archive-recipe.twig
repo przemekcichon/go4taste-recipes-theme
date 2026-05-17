@@ -3,7 +3,6 @@
 {% block content %}
     {% set archive_title = recipe_archive.title|default(title|default('Przepisy')) %}
     {% set archive_description = recipe_archive.description|default('Zbior przepisow w stylu go4taste.') %}
-    
     {# Hero data from ACF taxonomy term meta (fallback to defaults if not set) #}
     {% set hero = recipe_archive.hero|default({}) %}
     {% set hero_title_suffix = hero.title_suffix|default(archive_title) %}
@@ -70,7 +69,7 @@
 
                 <ul class="g4t-archive-hero-stats" aria-label="Charakterystyka zbioru przepisow">
                     <li class="g4t-archive-hero-stats__item">
-                        <span class="g4t-archive-hero-stats__value">{{ posts|length }}</span>
+                        <span class="g4t-archive-hero-stats__value">{{ term.count }}</span>
                         <span class="g4t-archive-hero-stats__label">przepisow</span>
                     </li>
                     <li class="g4t-archive-hero-stats__item">
@@ -82,14 +81,11 @@
                         <span class="g4t-archive-hero-stats__label">poziomy trudnosci</span>
                     </li>
                 </ul>
-                
-                {% if term and term.taxonomy %}
-                    {% set related_terms = fn('get_terms', term.taxonomy, {'exclude': term.id, 'number': 10}) %}
-                    {% if related_terms and related_terms is not empty %}
-                        <div class="g4t-archive-hero-tags" aria-label="Pozostale kategorie w zbiorze">
-                            {% for related_term in related_terms %}
-                                <a class="g4t-archive-hero-tag" href="{{ fn('get_term_link', related_term)|e('esc_url') }}">{{ related_term.name }}</a>
-                            {% endfor %}
+                {% if term is defined and term %}
+                    {% set current_term_link = fn('get_term_link', term) %}
+                    {% if not fn('is_wp_error', current_term_link) %}
+                        <div class="g4t-archive-hero-tags" aria-label="Aktualna kategoria">
+                            <a class="g4t-archive-hero-tag" href="{{ current_term_link|e('esc_url') }}">{{ term.name }}</a>
                         </div>
                     {% endif %}
                 {% endif %}
@@ -152,7 +148,7 @@
         <section class="archive-results" aria-labelledby="archive-results-title">
             <div class="archive-results__head">
                 <h2 id="archive-results-title">{{ archive_title }}</h2>
-                <p class="archive-results__count">{{ recipe_archive.total_posts|default(posts|length) }} przepisów</p>
+                <p class="archive-results__count">{{ term.count }} przepisów</p>
             </div>
 
             <ul class="recipe-archive-grid">
