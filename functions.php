@@ -17,6 +17,442 @@ Timber::$dirname = [ 'templates', 'views' ];
 new StarterSite();
 
 /**
+ * Return the current absolute URL.
+ */
+function go4taste_recipes_theme_current_url(): string {
+	if ( class_exists( '\Timber\URLHelper' ) ) {
+		$current_url = \Timber\URLHelper::get_current_url();
+		if ( is_string( $current_url ) && '' !== $current_url ) {
+			return $current_url;
+		}
+	}
+
+	$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '/';
+	return home_url( $request_uri );
+}
+
+/**
+ * Register the FacetWP facets required by the recipe quick actions filter.
+ *
+ * These facets are intentionally defined in code so the theme owns the facet
+ * contract and the FacetWP admin can keep them locked.
+ *
+ * @param array<int,array<string,mixed>> $facets Existing FacetWP facets.
+ * @return array<int,array<string,mixed>>
+ */
+function go4taste_recipes_theme_register_facetwp_facets( array $facets ): array {
+	$code_facets = array(
+		array(
+			'label'          => __( 'Typ dania', 'go4taste-recipes-theme' ),
+			'name'           => 'g4t_meal_type',
+			'type'           => 'checkboxes',
+			'source'         => 'tax/' . G4T_MEAL_TYPE_TAXONOMY,
+			'parent_term'    => '',
+			'hierarchical'   => 'no',
+			'orderby'        => 'display_value',
+			'count'          => '-1',
+			'show_expanded'  => 'no',
+			'ghosts'         => 'no',
+			'preserve_ghosts'=> 'no',
+			'operator'       => 'or',
+			'soft_limit'     => '-1',
+			'_code'          => true,
+		),
+		array(
+			'label'          => __( 'Czas przygotowania', 'go4taste-recipes-theme' ),
+			'name'           => 'g4t_prep_time',
+			'type'           => 'checkboxes',
+			'source'         => 'tax/' . G4T_PREP_TIME_TAXONOMY,
+			'parent_term'    => '',
+			'hierarchical'   => 'no',
+			'orderby'        => 'display_value',
+			'count'          => '-1',
+			'show_expanded'  => 'no',
+			'ghosts'         => 'no',
+			'preserve_ghosts'=> 'no',
+			'operator'       => 'or',
+			'soft_limit'     => '-1',
+			'_code'          => true,
+		),
+		array(
+			'label'          => __( 'Cechy', 'go4taste-recipes-theme' ),
+			'name'           => 'g4t_feature',
+			'type'           => 'checkboxes',
+			'source'         => 'tax/' . G4T_FEATURE_TAXONOMY,
+			'parent_term'    => '',
+			'hierarchical'   => 'no',
+			'orderby'        => 'display_value',
+			'count'          => '-1',
+			'show_expanded'  => 'no',
+			'ghosts'         => 'no',
+			'preserve_ghosts'=> 'no',
+			'operator'       => 'or',
+			'soft_limit'     => '-1',
+			'_code'          => true,
+		),
+		array(
+			'label'          => __( 'Składniki', 'go4taste-recipes-theme' ),
+			'name'           => 'g4t_ingredients',
+			'type'           => 'checkboxes',
+			'source'         => 'tax/' . G4T_INGREDIENT_TAXONOMY,
+			'parent_term'    => '',
+			'hierarchical'   => 'no',
+			'orderby'        => 'display_value',
+			'count'          => '-1',
+			'show_expanded'  => 'no',
+			'ghosts'         => 'no',
+			'preserve_ghosts'=> 'no',
+			'operator'       => 'or',
+			'soft_limit'     => '-1',
+			'_code'          => true,
+		),
+	);
+
+	$registered_names = wp_list_pluck( $code_facets, 'name' );
+
+	foreach ( $facets as $facet_index => $facet ) {
+		if ( ! is_array( $facet ) || ! isset( $facet['name'] ) ) {
+			continue;
+		}
+
+		if ( in_array( (string) $facet['name'], $registered_names, true ) ) {
+			unset( $facets[ $facet_index ] );
+		}
+	}
+
+	foreach ( $code_facets as $facet ) {
+		$facets[] = $facet;
+	}
+
+	return array_values( $facets );
+}
+
+add_filter( 'facetwp_facets', 'go4taste_recipes_theme_register_facetwp_facets', 10, 1 );
+
+/**
+ * Check whether the current request should be treated as a recipe listing.
+ */
+function go4taste_recipes_theme_is_listing_request(): bool {
+	$source_post_type = apply_filters( 'go4taste/recipes/source_post_type', 'post' );
+
+	if ( is_home() || is_front_page() ) {
+		return true;
+	}
+
+	if ( is_category() ) {
+		return true;
+	}
+
+	if ( is_post_type_archive( $source_post_type ) ) {
+		return true;
+	}
+
+	if ( is_tax() ) {
+		$queried_object = get_queried_object();
+		if ( $queried_object instanceof WP_Term ) {
+			$taxonomy = get_taxonomy( $queried_object->taxonomy );
+			if ( $taxonomy && is_array( $taxonomy->object_type ) && in_array( $source_post_type, $taxonomy->object_type, true ) ) {
+				return true;
+			}
+		}
+	}
+
+	if ( is_archive() && apply_filters( 'go4taste/recipes/use_archive_template', false, get_queried_object() ) ) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Read selected facet values from the current request.
+ *
+ * @param string $param Query parameter name.
+ * @return array<int,string>
+ */
+function go4taste_recipes_theme_get_request_values( string $param ): array {
+	if ( '' === $param || ! isset( $_GET[ $param ] ) ) {
+		return array();
+	}
+
+	$raw_value = wp_unslash( (string) $_GET[ $param ] );
+	if ( '' === $raw_value ) {
+		return array();
+	}
+
+	$values = array_map( 'sanitize_title', explode( ',', $raw_value ) );
+	$values = array_filter(
+		array_unique( $values ),
+		static function ( string $value ): bool {
+			return '' !== $value;
+		}
+	);
+
+	return array_values( $values );
+}
+
+/**
+ * Build a tax_query clause from selected facet values.
+ *
+ * @param array<string,array<int,string>> $facets Selected facet values.
+ * @return array<int,array<string,mixed>>
+ */
+function go4taste_recipes_theme_build_tax_query_from_facets( array $facets ): array {
+	$facet_taxonomies = array(
+		'mealType'    => G4T_MEAL_TYPE_TAXONOMY,
+		'prepTime'    => G4T_PREP_TIME_TAXONOMY,
+		'feature'     => G4T_FEATURE_TAXONOMY,
+		'ingredients' => G4T_INGREDIENT_TAXONOMY,
+	);
+	$facet_key_aliases = array(
+		'mealType'    => array( 'mealType', 'g4t_meal_type' ),
+		'prepTime'    => array( 'prepTime', 'g4t_prep_time' ),
+		'feature'     => array( 'feature', 'g4t_feature' ),
+		'ingredients' => array( 'ingredients', 'g4t_ingredients' ),
+	);
+
+	$tax_query = array();
+
+	foreach ( $facet_taxonomies as $facet_key => $taxonomy ) {
+		$values = array();
+
+		foreach ( $facet_key_aliases[ $facet_key ] ?? array( $facet_key ) as $facet_key_alias ) {
+			if ( isset( $facets[ $facet_key_alias ] ) && is_array( $facets[ $facet_key_alias ] ) ) {
+				$values = $facets[ $facet_key_alias ];
+				break;
+			}
+		}
+
+		$values = array_values(
+			array_filter(
+				array_map( 'sanitize_title', $values ),
+				static function ( string $value ): bool {
+					return '' !== $value;
+				}
+			)
+		);
+
+		if ( empty( $values ) ) {
+			continue;
+		}
+
+		$tax_query[] = array(
+			'taxonomy' => $taxonomy,
+			'field'    => 'slug',
+			'terms'    => $values,
+			'operator' => 'IN',
+		);
+	}
+
+	if ( count( $tax_query ) > 1 ) {
+		$tax_query['relation'] = 'AND';
+	}
+
+	return $tax_query;
+}
+
+/**
+ * Calculate the number of posts matching the selected quick-actions facets.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response
+ */
+function go4taste_recipes_theme_rest_filter_count( WP_REST_Request $request ): WP_REST_Response {
+	$facets = $request->get_param( 'facets' );
+	if ( ! is_array( $facets ) ) {
+		$facets = array();
+	}
+
+	$query_args = array(
+		'post_type'           => apply_filters( 'go4taste/recipes/source_post_type', 'post' ),
+		'post_status'         => 'publish',
+		'posts_per_page'      => 1,
+		'no_found_rows'       => false,
+		'ignore_sticky_posts' => true,
+		'fields'              => 'ids',
+	);
+
+	$tax_query = go4taste_recipes_theme_build_tax_query_from_facets( $facets );
+	if ( ! empty( $tax_query ) ) {
+		$query_args['tax_query'] = $tax_query;
+	}
+
+	$query = new WP_Query( $query_args );
+
+	return new WP_REST_Response(
+		array(
+			'total_rows' => (int) $query->found_posts,
+		),
+		200
+	);
+}
+
+/**
+ * Register the quick-actions count endpoint.
+ */
+function go4taste_recipes_theme_register_rest_routes(): void {
+	register_rest_route(
+		'go4taste-recipes/v1',
+		'/filter-count',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'go4taste_recipes_theme_rest_filter_count',
+			'permission_callback' => '__return_true',
+		)
+	);
+}
+
+add_action( 'rest_api_init', 'go4taste_recipes_theme_register_rest_routes' );
+
+/**
+ * Filter the main recipe query using the same URL params as the Quick Actions Bar.
+ */
+function go4taste_recipes_theme_filter_listing_query( WP_Query $query ): void {
+	if ( is_admin() || ! $query->is_main_query() || ! go4taste_recipes_theme_is_listing_request() ) {
+		return;
+	}
+
+	$source_post_type = apply_filters( 'go4taste/recipes/source_post_type', 'post' );
+	$query->set( 'post_type', $source_post_type );
+
+	$tax_query = $query->get( 'tax_query' );
+	if ( ! is_array( $tax_query ) ) {
+		$tax_query = array();
+	}
+
+	$facet_taxonomies = array(
+		'g4t_meal_type'   => G4T_MEAL_TYPE_TAXONOMY,
+		'g4t_prep_time'   => G4T_PREP_TIME_TAXONOMY,
+		'g4t_feature'     => G4T_FEATURE_TAXONOMY,
+		'g4t_ingredients' => G4T_INGREDIENT_TAXONOMY,
+	);
+
+	foreach ( $facet_taxonomies as $param => $taxonomy ) {
+		$values = go4taste_recipes_theme_get_request_values( $param );
+		if ( empty( $values ) ) {
+			continue;
+		}
+
+		$tax_query[] = array(
+			'taxonomy' => $taxonomy,
+			'field'    => 'slug',
+			'terms'    => $values,
+			'operator' => 'IN',
+		);
+	}
+
+	if ( count( $tax_query ) > 1 ) {
+		$tax_query['relation'] = 'AND';
+	}
+
+	$query->set( 'tax_query', $tax_query );
+}
+
+add_action( 'pre_get_posts', 'go4taste_recipes_theme_filter_listing_query' );
+
+/**
+ * Add tax_query to home query args based on URL params.
+ */
+function go4taste_recipes_theme_filter_home_query_args( array $args ): array {
+	if ( ! go4taste_recipes_theme_is_listing_request() ) {
+		return $args;
+	}
+
+	$facet_taxonomies = array(
+		'g4t_meal_type'   => G4T_MEAL_TYPE_TAXONOMY,
+		'g4t_prep_time'   => G4T_PREP_TIME_TAXONOMY,
+		'g4t_feature'     => G4T_FEATURE_TAXONOMY,
+		'g4t_ingredients' => G4T_INGREDIENT_TAXONOMY,
+	);
+
+	$tax_query = isset( $args['tax_query'] ) && is_array( $args['tax_query'] ) ? $args['tax_query'] : array();
+
+	foreach ( $facet_taxonomies as $param => $taxonomy ) {
+		$values = go4taste_recipes_theme_get_request_values( $param );
+		if ( empty( $values ) ) {
+			continue;
+		}
+
+		$tax_query[] = array(
+			'taxonomy' => $taxonomy,
+			'field'    => 'slug',
+			'terms'    => $values,
+			'operator' => 'IN',
+		);
+	}
+
+	if ( count( $tax_query ) > 1 ) {
+		$tax_query['relation'] = 'AND';
+	}
+
+	if ( ! empty( $tax_query ) ) {
+		$args['tax_query'] = $tax_query;
+	}
+
+	return $args;
+}
+
+add_filter( 'go4taste/recipes/home_query_args', 'go4taste_recipes_theme_filter_home_query_args' );
+
+/**
+ * Build filter options from taxonomy terms for the quick actions panel.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @param bool   $hide_empty Whether to hide empty terms.
+ * @return array<int,array<string,string>>
+ */
+function go4taste_recipes_theme_get_filter_options_from_taxonomy( string $taxonomy, bool $hide_empty = true ): array {
+	if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
+		return array();
+	}
+
+	$terms = get_terms(
+		array(
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => $hide_empty,
+		)
+	);
+
+	if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+		return array();
+	}
+
+	$options = array();
+
+	foreach ( $terms as $term ) {
+		if ( ! $term instanceof WP_Term ) {
+			continue;
+		}
+
+		$options[] = array(
+			'value' => (string) $term->slug,
+			'label' => (string) $term->name,
+		);
+	}
+
+	return $options;
+}
+
+/**
+ * Return quick-actions filter option payload passed to JavaScript.
+ *
+ * @return array<string,array<int,array<string,string>>>
+ */
+function go4taste_recipes_theme_get_quick_actions_filter_options(): array {
+	$meal_type_taxonomy   = defined( 'G4T_MEAL_TYPE_TAXONOMY' ) ? (string) G4T_MEAL_TYPE_TAXONOMY : 'recipe_meal_type';
+	$prep_time_taxonomy   = defined( 'G4T_PREP_TIME_TAXONOMY' ) ? (string) G4T_PREP_TIME_TAXONOMY : 'recipe_prep_time_range';
+	$feature_taxonomy     = defined( 'G4T_FEATURE_TAXONOMY' ) ? (string) G4T_FEATURE_TAXONOMY : 'recipe_feature';
+	$ingredient_taxonomy  = defined( 'G4T_INGREDIENT_TAXONOMY' ) ? (string) G4T_INGREDIENT_TAXONOMY : 'recipe_ingredient';
+
+	return array(
+		'mealType'    => go4taste_recipes_theme_get_filter_options_from_taxonomy( $meal_type_taxonomy ),
+		'prepTime'    => go4taste_recipes_theme_get_filter_options_from_taxonomy( $prep_time_taxonomy ),
+		'feature'     => go4taste_recipes_theme_get_filter_options_from_taxonomy( $feature_taxonomy, false ),
+		'ingredients' => go4taste_recipes_theme_get_filter_options_from_taxonomy( $ingredient_taxonomy ),
+	);
+}
+
+/**
  * Enqueue full prototype assets for recipe views.
  */
 function go4taste_recipes_theme_enqueue_assets() {
@@ -33,6 +469,7 @@ function go4taste_recipes_theme_enqueue_assets() {
 
 	$theme_version = wp_get_theme()->get( 'Version' );
 	$base_uri      = get_template_directory_uri() . '/assets';
+	$quick_actions_version = filemtime( get_template_directory() . '/assets/js/quick-actions-bar.js' );
 
 	wp_enqueue_style(
 		'go4taste-recipes-fonts',
@@ -172,8 +609,16 @@ function go4taste_recipes_theme_enqueue_assets() {
 		'go4taste-recipes-quick-actions-bar',
 		$base_uri . '/js/quick-actions-bar.js',
 		array(),
-		$theme_version,
+		$quick_actions_version ? (string) $quick_actions_version : $theme_version,
 		true
+	);
+
+	wp_localize_script(
+		'go4taste-recipes-quick-actions-bar',
+		'go4tasteQuickActionsConfig',
+		array(
+			'options' => go4taste_recipes_theme_get_quick_actions_filter_options(),
+		)
 	);
 }
 add_action( 'wp_enqueue_scripts', 'go4taste_recipes_theme_enqueue_assets', 30 );

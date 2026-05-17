@@ -1,12 +1,25 @@
 {% extends "base.twig" %}
 
 {% block content %}
+    {% set facetwp_enabled = recipes.facetwp_available|default(false) %}
+    {% set facetwp_prefix = recipes.facetwp_prefix|default('g4t_') %}
+    {% set current_url = fn('go4taste_recipes_theme_current_url') %}
     <section class="home-hero" aria-labelledby="home-hero-title">
         <div class="home-hero__inner site-container">
             <div class="home-hero__identity">
                 <p class="home-hero__eyebrow">Go4Taste Przepisy</p>
                 <h1 id="home-hero-title" class="home-hero__title">Nowa strona glowna dla migracji przepisow</h1>
                 <p class="home-hero__lead">Startowy widok, ktory prowadzi uzytkownika od kategorii i inspiracji do pojedynczego przepisu.</p>
+
+                {% if recipe_home.active_filter_tags is not empty %}
+                    <nav class="home-hero__chips" aria-label="Aktualnie wybrane filtry">
+                        {% for tag in recipe_home.active_filter_tags %}
+                            <a class="home-chip" href="{{ tag.url|e('esc_url') }}" title="Przepisy z {{ tag.name }}">
+                                {{ tag.name }}
+                            </a>
+                        {% endfor %}
+                    </nav>
+                {% endif %}
 
                 <div class="home-hero__cta-row">
                     <a class="home-cta home-cta--primary" href="#przepisy">Przegladaj przepisy</a>
@@ -28,13 +41,18 @@
         </div>
     </section>
 
-    <section id="przepisy" class="home-section home-section--recipes site-container" aria-labelledby="przepisy-title">
+    <section id="przepisy" class="home-section home-section--recipes site-container recipe-listing-shell"
+        aria-labelledby="przepisy-title"
+        data-facetwp-enabled="{{ facetwp_enabled ? 'true' : 'false' }}"
+        data-base-url="{{ fn('home_url', '/')|e('esc_url') }}"
+        data-current-url="{{ current_url|e('esc_url') }}"
+        data-facetwp-prefix="{{ facetwp_prefix|e('html_attr') }}">
         <div class="home-section__head">
             <p class="home-section__eyebrow">Inspiracje</p>
             <h2 id="przepisy-title">Najnowsze przepisy</h2>
         </div>
 
-        <ul class="home-recipe-grid">
+        <ul class="home-recipe-grid facetwp-template">
             {% for post_item in posts|slice(0, 10) %}
                 <li class="home-recipe-card">
                     <a href="{{ post_item.link|e('esc_url') }}">

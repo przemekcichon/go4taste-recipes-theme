@@ -22,78 +22,68 @@
 
     var storageKey = "g4t-theme-mode";
     var recipeActionsBreakpoint = 980;
-    var cardData = [];
-    var initialArchiveCountText = null;
     var hasArchiveGrid = false;
+    var hasRecipeListingShell = false;
+    var facetwpListingEnabled = false;
     var hasSingleRecipePage = false;
     var showRecipeQuickActions = false;
     var lastScrollY = 0;
     var scrollDeltaThreshold = 10;
     var topRevealOffset = 24;
+    var facetwpCountRequestToken = 0;
+    var recipeListingState = {
+        enabled: false,
+        baseUrl: "",
+        currentUrl: "",
+        prefix: "g4t_"
+    };
     var filterState = {
         mealType: [],
         prepTime: [],
-        features: {
-            glutenFree: false,
-            withNuts: false
-        },
+        features: [],
         ingredients: []
     };
 
-    var MEAL_TYPE_OPTIONS = [
-        { value: "breakfast", label: "Śniadanie" },
-        { value: "main", label: "Danie główne" },
-        { value: "dessert", label: "Deser" },
-        { value: "drink", label: "Napój" }
-    ];
+    var FACET_PARAM_KEYS = {
+        mealType: "meal_type",
+        prepTime: "prep_time",
+        feature: "feature",
+        ingredients: "ingredients"
+    };
 
-    var TIME_OPTIONS = [
-        { value: "up-to-15", label: "do 15 min" },
-        { value: "16-30", label: "16-30 min" },
-        { value: "31-60", label: "31-60 min" },
-        { value: "over-60", label: "pow. 60 min" }
-    ];
+    var quickActionsConfig = window.go4tasteQuickActionsConfig || {};
+    var dynamicOptions = quickActionsConfig.options || {};
 
-    var FEATURE_OPTIONS = [
-        { value: "glutenFree", label: "Bez glutenu" },
-        { value: "withNuts", label: "Dania z orzechami" }
-    ];
+    var DEFAULT_MEAL_TYPE_OPTIONS = [];
+    var DEFAULT_TIME_OPTIONS = [];
+    var DEFAULT_FEATURE_OPTIONS = [];
+    var DEFAULT_INGREDIENT_OPTIONS = [];
 
-    var INGREDIENT_OPTIONS = [
-        { value: "pistacje", label: "Pistacje" },
-        { value: "orzechy-wloskie", label: "Orzechy włoskie" },
-        { value: "orzechy-nerkowca", label: "Orzechy nerkowca" },
-        { value: "migdal", label: "Migdał" },
-        { value: "sezam", label: "Sezam" },
-        { value: "slonecznik", label: "Słonecznik" },
-        { value: "dynia", label: "Pestki dyni" },
-        { value: "chia", label: "Nasiona chia" },
-        { value: "siemie-lniane", label: "Siemię lniane" },
-        { value: "kurczak", label: "Kurczak" },
-        { value: "wolowina", label: "Wołowina" },
-        { value: "indyk", label: "Indyk" },
-        { value: "losos", label: "Łosoś" },
-        { value: "krewetki", label: "Krewetki" },
-        { value: "tofu", label: "Tofu" },
-        { value: "ciecierzyca", label: "Ciecierzyca" },
-        { value: "soczewica", label: "Soczewica" },
-        { value: "fasola", label: "Fasola" },
-        { value: "komosa", label: "Komosa ryżowa" },
-        { value: "ryz", label: "Ryż" },
-        { value: "makaron", label: "Makaron" },
-        { value: "ziemniaki", label: "Ziemniaki" },
-        { value: "bataty", label: "Bataty" },
-        { value: "brokuly", label: "Brokuły" },
-        { value: "szpinak", label: "Szpinak" },
-        { value: "papryka", label: "Papryka" },
-        { value: "pomidor", label: "Pomidor" },
-        { value: "awokado", label: "Awokado" },
-        { value: "kokos", label: "Kokos" },
-        { value: "jogurt", label: "Jogurt" },
-        { value: "miod", label: "Miód" },
-        { value: "czekolada", label: "Czekolada" },
-        { value: "owoce", label: "Owoce" }
-    ];
+    function normalizeOptionList(candidate, fallback) {
+        if (!Array.isArray(candidate) || candidate.length === 0) {
+            return fallback;
+        }
+
+        var normalized = candidate.map(function (option) {
+            if (!option || typeof option.value !== "string" || typeof option.label !== "string") {
+                return null;
+            }
+
+            return {
+                value: option.value,
+                label: option.label
+            };
+        }).filter(function (option) {
+            return option !== null;
+        });
+
+        return normalized.length > 0 ? normalized : fallback;
+    }
+
+    var MEAL_TYPE_OPTIONS = normalizeOptionList(dynamicOptions.mealType, DEFAULT_MEAL_TYPE_OPTIONS);
+    var TIME_OPTIONS = normalizeOptionList(dynamicOptions.prepTime, DEFAULT_TIME_OPTIONS);
+    var FEATURE_OPTIONS = normalizeOptionList(dynamicOptions.feature, DEFAULT_FEATURE_OPTIONS);
+    var INGREDIENT_OPTIONS = normalizeOptionList(dynamicOptions.ingredients, DEFAULT_INGREDIENT_OPTIONS);
 
     function pageSupportsQuickActionsBar() {
         return Boolean(
@@ -273,160 +263,170 @@
         lastScrollY = currentScrollY;
     }
 
-    /* Recipe card filter data extraction */
-    function getRecipeCards() {
-        var allCards = Array.prototype.slice.call(document.querySelectorAll(".recipe-archive-grid .recipe-teaser-card"));
-        return allCards.filter(function (card) {
-            return !card.classList.contains("recipe-teaser-card--ad");
+    function getRecipeListingShell() {
+        return document.querySelector(".recipe-listing-shell");
+    }
+
+    function syncRecipeListingState() {
+        recipeListingState = {
+            enabled: false,
+            baseUrl: window.location.href,
+            currentUrl: window.location.href,
+            prefix: "g4t_"
+        };
+
+        var listingShell = getRecipeListingShell();
+        hasRecipeListingShell = Boolean(listingShell);
+
+        if (!listingShell) {
+            return;
+        }
+
+        recipeListingState.enabled = listingShell.dataset.facetwpEnabled === "true";
+        recipeListingState.baseUrl = listingShell.dataset.baseUrl || window.location.href;
+        recipeListingState.currentUrl = listingShell.dataset.currentUrl || window.location.href;
+        recipeListingState.prefix = listingShell.dataset.facetwpPrefix || "g4t_";
+    }
+
+    function getFacetParamName(facetKey) {
+        return recipeListingState.prefix + FACET_PARAM_KEYS[facetKey];
+    }
+
+    function splitQueryValues(rawValue) {
+        if (typeof rawValue !== "string" || rawValue === "") {
+            return [];
+        }
+
+        return rawValue.split(",").map(function (value) {
+            return value.trim();
+        }).filter(function (value) {
+            return value !== "";
         });
     }
 
-    function parsePrepTime(card) {
-        var timeNode = card.querySelector(".recipe-teaser-card__meta span");
-        if (!timeNode) {
-            return 0;
-        }
+    function parseFilterStateFromUrl() {
+        var params = new URLSearchParams(window.location.search);
 
-        var match = timeNode.textContent.match(/\d+/);
-        return match ? Number(match[0]) : 0;
-    }
+        filterState.mealType = splitQueryValues(params.get(getFacetParamName("mealType")));
+        filterState.prepTime = splitQueryValues(params.get(getFacetParamName("prepTime")));
+        filterState.features = splitQueryValues(params.get(getFacetParamName("feature")));
 
-    function inferMealType(text) {
-        if (/koktajl|napoj|smoothie/.test(text)) {
-            return "drink";
-        }
-        if (/ciast|deser|czekolad/.test(text)) {
-            return "dessert";
-        }
-        if (/curry|obiad|danie glowne|danie głowne|kurczak/.test(text)) {
-            return "main";
-        }
-        if (/sniadan|śniadan|granol|owsiank|jaglank|tost/.test(text)) {
-            return "breakfast";
-        }
-
-        return "main";
-    }
-
-    function getIngredients(text) {
-        var found = [];
-
-        INGREDIENT_OPTIONS.forEach(function (option) {
-            if (new RegExp(option.value.replace(/-/g, "[-\\s]?"), "i").test(text)) {
-                found.push(option.value);
+        if (filterState.features.length === 0) {
+            if (params.has(recipeListingState.prefix + "gluten_free")) {
+                filterState.features.push("gluten-free");
             }
-        });
 
-        return found;
+            if (params.has(recipeListingState.prefix + "with_nuts")) {
+                filterState.features.push("with-nuts");
+            }
+        }
+
+        filterState.ingredients = splitQueryValues(params.get(getFacetParamName("ingredients")));
     }
 
-    function isLikelyGlutenFree(text) {
-        if (/bez glutenu|gluten free/.test(text)) {
-            return true;
+    function buildFacetSelections() {
+        var facets = {};
+        var groups = panel.querySelectorAll(".quick-actions-filter-group");
+
+        if (!groups.length) {
+            if (filterState.mealType.length > 0) {
+                facets[getFacetParamName("mealType")] = filterState.mealType.slice();
+            }
+
+            if (filterState.prepTime.length > 0) {
+                facets[getFacetParamName("prepTime")] = filterState.prepTime.slice();
+            }
+
+            if (filterState.features.length > 0) {
+                facets[getFacetParamName("feature")] = filterState.features.slice();
+            }
+
+            if (filterState.ingredients.length > 0) {
+                facets[getFacetParamName("ingredients")] = filterState.ingredients.slice();
+            }
+
+            return facets;
         }
 
-        return !/ciast|tost|granol|owsiank|makaron|chleb/.test(text);
-    }
-
-    function extractCardData() {
-        cardData = getRecipeCards().map(function (card) {
-            var title = (card.querySelector("h3") ? card.querySelector("h3").textContent : "").toLowerCase();
-            var description = (card.querySelector("p") ? card.querySelector("p").textContent : "").toLowerCase();
-            var searchableText = (title + " " + description).replace(/\s+/g, " ").trim();
-
-            return {
-                card: card,
-                mealType: inferMealType(searchableText),
-                prepTime: parsePrepTime(card),
-                features: {
-                    glutenFree: isLikelyGlutenFree(searchableText),
-                    withNuts: /orzech|pistac|migdal|pestk/.test(searchableText)
-                },
-                ingredients: getIngredients(searchableText)
-            };
-        });
-    }
-
-    function matchesTimeFilter(timeValue, prepTime) {
-        if (timeValue === "up-to-15") {
-            return prepTime <= 15;
-        }
-        if (timeValue === "16-30") {
-            return prepTime >= 16 && prepTime <= 30;
-        }
-        if (timeValue === "31-60") {
-            return prepTime >= 31 && prepTime <= 60;
-        }
-
-        return prepTime > 60;
-    }
-
-    function renderCount(visibleCount) {
-        var countNode = document.querySelector(".archive-results__count");
-        if (!countNode) {
-            return;
-        }
-
-        // Keep server-rendered total when no local filters are active.
-        if (countActiveFilters() === 0 && initialArchiveCountText !== null) {
-            countNode.textContent = initialArchiveCountText;
-            return;
-        }
-
-        countNode.textContent = visibleCount + " przepisów";
-    }
-
-    function getMatchingCount() {
-        var visibleCount = 0;
-
-        cardData.forEach(function (item) {
-            var matchesMealType = filterState.mealType.length === 0 || filterState.mealType.indexOf(item.mealType) !== -1;
-            var matchesTime = filterState.prepTime.length === 0 || filterState.prepTime.some(function (timeValue) {
-                return matchesTimeFilter(timeValue, item.prepTime);
+        groups.forEach(function (group) {
+            var facetKey = group.dataset.facetKey || "";
+            var checkedValues = Array.from(group.querySelectorAll(".quick-actions-filter-option__check:checked")).map(function (input) {
+                return input.value;
             });
-            var matchesFeatures = (!filterState.features.glutenFree || item.features.glutenFree)
-                && (!filterState.features.withNuts || item.features.withNuts);
 
-            var matchesIngredients = filterState.ingredients.length === 0
-                || filterState.ingredients.some(function (ingredient) {
-                    return item.ingredients.indexOf(ingredient) !== -1;
-                });
-
-            if (matchesMealType && matchesTime && matchesFeatures && matchesIngredients) {
-                visibleCount += 1;
+            if (!facetKey || checkedValues.length === 0) {
+                return;
             }
+
+            facets[getFacetParamName(facetKey)] = checkedValues;
         });
 
-        return visibleCount;
+        return facets;
     }
 
-    function updateApplyButtonState() {
-        var matchingCount = getMatchingCount();
+    function buildFacetQueryParams() {
+        var params = new URLSearchParams();
+        var facets = buildFacetSelections();
 
-        if (matchingCount === 0) {
-            applyButton.disabled = true;
-            applyButton.textContent = "Brak wyników";
-            return;
+        Object.keys(facets).forEach(function (facetName) {
+            if (!facets[facetName] || !facets[facetName].length) {
+                return;
+            }
+
+            params.set(facetName, facets[facetName].join(","));
+        });
+
+        return params;
+    }
+
+    function buildFacetRefreshPayload() {
+        var facetSelections = buildFacetSelections();
+        var queryParams = buildFacetQueryParams();
+        var requestUrl = getListingRequestUrl();
+
+        if (queryParams.toString()) {
+            requestUrl += (requestUrl.indexOf("?") === -1 ? "?" : "&") + queryParams.toString();
         }
 
-        applyButton.disabled = false;
-        applyButton.textContent = "Pokaż wyniki (" + matchingCount + ")";
+        return {
+            action: "facetwp_refresh",
+            data: {
+                facets: facetSelections,
+                template: "wp",
+                http_params: {
+                    get: Object.keys(facetSelections).reduce(function (carry, facetName) {
+                        carry[facetName] = facetSelections[facetName].join(",");
+                        return carry;
+                    }, {}),
+                    uri: requestUrl
+                },
+                extras: {
+                    counts: true
+                },
+                frozen_facets: {},
+                soft_refresh: 0,
+                is_bfcache: 0,
+                first_load: 0,
+                paged: 1
+            }
+        };
     }
+        function getListingRequestUrl() {
+            var sourceUrl = recipeListingState.currentUrl || recipeListingState.baseUrl || window.location.href;
+
+            try {
+                return new URL(sourceUrl, window.location.href).pathname;
+            } catch (error) {
+                return window.location.pathname;
+            }
+        }
+
 
     function countActiveFilters() {
-        var featureCount = 0;
-
-        if (filterState.features.glutenFree) {
-            featureCount += 1;
-        }
-        if (filterState.features.withNuts) {
-            featureCount += 1;
-        }
-
         return filterState.mealType.length
             + filterState.prepTime.length
             + filterState.ingredients.length
-            + featureCount;
+            + filterState.features.length;
     }
 
     function updateFilterButtonState() {
@@ -440,37 +440,48 @@
         labelNode.textContent = activeCount > 0 ? "Filtr (" + activeCount + ")" : "Filtr";
     }
 
-    function applyFilters() {
-        var visibleCount = getMatchingCount();
+    function buildFacetRedirectUrl() {
+        var queryParams = buildFacetQueryParams();
+        var targetUrl = getListingRequestUrl();
 
-        cardData.forEach(function (item) {
-            var matchesMealType = filterState.mealType.length === 0 || filterState.mealType.indexOf(item.mealType) !== -1;
-            var matchesTime = filterState.prepTime.length === 0 || filterState.prepTime.some(function (timeValue) {
-                return matchesTimeFilter(timeValue, item.prepTime);
-            });
-            var matchesFeatures = (!filterState.features.glutenFree || item.features.glutenFree)
-                && (!filterState.features.withNuts || item.features.withNuts);
+        if (queryParams.toString()) {
+            targetUrl += (targetUrl.indexOf("?") === -1 ? "?" : "&") + queryParams.toString();
+        }
 
-            var matchesIngredients = filterState.ingredients.length === 0
-                || filterState.ingredients.some(function (ingredient) {
-                    return item.ingredients.indexOf(ingredient) !== -1;
-                });
+        return targetUrl;
+    }
 
-            var shouldShow = matchesMealType && matchesTime && matchesFeatures && matchesIngredients;
-            item.card.hidden = !shouldShow;
+    function updateApplyButtonLabel(totalRows) {
+        if (!applyButton) {
+            return;
+        }
 
-        });
+        if (typeof totalRows === "number" && totalRows >= 0) {
+            if (totalRows === 0) {
+                applyButton.textContent = "Brak wyników";
+                applyButton.disabled = true;
+                return;
+            }
 
-        renderCount(visibleCount);
-        updateApplyButtonState();
-        updateFilterButtonState();
+            applyButton.disabled = false;
+            applyButton.textContent = "Pokaż wyniki (" + totalRows + ")";
+            return;
+        }
+
+        applyButton.disabled = false;
+        applyButton.textContent = "Pokaż wyniki";
+    }
+
+    function handleApplyFilters() {
+        closeFilterPanel();
+        window.location.href = buildFacetRedirectUrl();
     }
 
     function closeFilterPanel() {
         quickActionsBarHost.classList.remove("is-filter-open");
         filterButton.setAttribute("aria-expanded", "false");
         panel.setAttribute("aria-hidden", "true");
-        if (hasArchiveGrid && document.body.contains(filterButton)) {
+        if ((hasArchiveGrid || hasRecipeListingShell) && document.body.contains(filterButton)) {
             filterButton.focus();
         }
     }
@@ -484,14 +495,55 @@
     function resetFilters() {
         filterState.mealType = [];
         filterState.prepTime = [];
-        filterState.features.glutenFree = false;
-        filterState.features.withNuts = false;
+        filterState.features = [];
         filterState.ingredients = [];
 
         panelForm.reset();
 
-        applyFilters();
-        updateApplyButtonState();
+        closeFilterPanel();
+        window.location.href = window.location.pathname;
+    }
+
+    function updateApplyButtonState() {
+        if (!facetwpListingEnabled || !applyButton) {
+            return;
+        }
+
+        var requestToken = ++facetwpCountRequestToken;
+        var payload = {
+            facets: buildFacetSelections()
+        };
+
+        applyButton.disabled = false;
+        updateApplyButtonLabel(null);
+
+        window.fetch("/wp-json/go4taste-recipes/v1/filter-count", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error("Result count request failed: " + response.status);
+            }
+
+            return response.json();
+        }).then(function (responseData) {
+            if (requestToken !== facetwpCountRequestToken) {
+                return;
+            }
+
+            var totalRows = responseData && typeof responseData.total_rows === "number" ? responseData.total_rows : null;
+            updateApplyButtonLabel(totalRows);
+        }).catch(function () {
+            if (requestToken !== facetwpCountRequestToken) {
+                return;
+            }
+
+            updateApplyButtonLabel(null);
+        });
     }
 
     /* Filter panel builder */
@@ -504,6 +556,7 @@
         var isExpanded = false;
 
         group.className = "quick-actions-filter-group";
+        group.dataset.facetKey = config.facetKey || "";
         legend.className = "quick-actions-filter-group__label";
         legend.textContent = config.label;
         list.className = "quick-actions-filter-list";
@@ -538,13 +591,14 @@
             input.type = "checkbox";
             input.value = option.value;
 
-            if (option.value === config.defaultValue) {
+            if (typeof config.isSelected === "function" ? config.isSelected(option.value) : option.value === config.defaultValue) {
                 input.checked = true;
             }
 
             input.addEventListener("change", function () {
                 if (config.multiple) {
                     config.onChange(option.value, input.checked);
+                    updateFilterButtonState();
                     updateApplyButtonState();
                     return;
                 }
@@ -554,6 +608,7 @@
                 });
                 input.checked = true;
                 config.onChange(option.value, true);
+                updateFilterButtonState();
                 updateApplyButtonState();
             });
 
@@ -580,6 +635,10 @@
     }
 
     function buildFilterPanel() {
+        if (!facetwpListingEnabled) {
+            return;
+        }
+
         var panelHeader = document.createElement("div");
         var panelTitle = document.createElement("p");
         var panelCloseButton = document.createElement("button");
@@ -606,9 +665,13 @@
         panelHeader.appendChild(panelCloseButton);
 
         panelForm.appendChild(makeOptionGroup({
+            facetKey: "mealType",
             label: "Typ dania",
             options: MEAL_TYPE_OPTIONS,
             multiple: true,
+            isSelected: function (value) {
+                return filterState.mealType.indexOf(value) !== -1;
+            },
             onChange: function (value, checked) {
                 if (checked && filterState.mealType.indexOf(value) === -1) {
                     filterState.mealType.push(value);
@@ -622,9 +685,13 @@
         }));
 
         panelForm.appendChild(makeOptionGroup({
+            facetKey: "prepTime",
             label: "Czas przygotowania",
             options: TIME_OPTIONS,
             multiple: true,
+            isSelected: function (value) {
+                return filterState.prepTime.indexOf(value) !== -1;
+            },
             onChange: function (value, checked) {
                 if (checked && filterState.prepTime.indexOf(value) === -1) {
                     filterState.prepTime.push(value);
@@ -638,18 +705,34 @@
         }));
 
         panelForm.appendChild(makeOptionGroup({
+            facetKey: "feature",
             label: "Cechy",
             options: FEATURE_OPTIONS,
             multiple: true,
+            isSelected: function (value) {
+                return filterState.features.indexOf(value) !== -1;
+            },
             onChange: function (value, checked) {
-                filterState.features[value] = checked;
+                if (checked && filterState.features.indexOf(value) === -1) {
+                    filterState.features.push(value);
+                }
+
+                if (!checked) {
+                    filterState.features = filterState.features.filter(function (entry) {
+                        return entry !== value;
+                    });
+                }
             }
         }));
 
         panelForm.appendChild(makeOptionGroup({
+            facetKey: "ingredients",
             label: "Składniki",
             options: INGREDIENT_OPTIONS,
             multiple: true,
+            isSelected: function (value) {
+                return filterState.ingredients.indexOf(value) !== -1;
+            },
             onChange: function (value, checked) {
                 if (checked && filterState.ingredients.indexOf(value) === -1) {
                     filterState.ingredients.push(value);
@@ -672,8 +755,7 @@
 
         panelForm.addEventListener("submit", function (event) {
             event.preventDefault();
-            applyFilters();
-            closeFilterPanel();
+            handleApplyFilters();
         });
 
         resetButton.addEventListener("click", function () {
@@ -689,6 +771,7 @@
         panel.appendChild(panelHeader);
         panel.appendChild(panelForm);
         quickActionsBarHost.appendChild(panel);
+        updateFilterButtonState();
         updateApplyButtonState();
 
         filterButton.addEventListener("click", function () {
@@ -739,7 +822,14 @@
     toggleButton.appendChild(toggleModeLabel);
     quickActionsBarHost.appendChild(toggleButton);
 
-    if (hasArchiveGrid) {
+    syncRecipeListingState();
+    facetwpListingEnabled = hasRecipeListingShell && recipeListingState.enabled;
+
+    if (hasArchiveGrid || facetwpListingEnabled) {
+        quickActionsBarHost.classList.add("quick-actions-bar--with-filters");
+    }
+
+    if (facetwpListingEnabled) {
         filterButton.className = "quick-actions-bar__button quick-actions-bar__button--filter";
         filterButton.type = "button";
         filterButton.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M4 6h6'/><path d='M14 6h6'/><circle cx='11' cy='6' r='2'/><path d='M4 12h10'/><path d='M18 12h2'/><circle cx='15' cy='12' r='2'/><path d='M4 18h2'/><path d='M10 18h10'/><circle cx='7' cy='18' r='2'/></svg><span class='quick-actions-bar__filter-text'>Filtr</span>";
@@ -801,15 +891,12 @@
         window.addEventListener("resize", updateRecipeQuickActionsVisibility);
     }
 
-    if (hasArchiveGrid) {
-        var initialCountNode = document.querySelector(".archive-results__count");
-        if (initialCountNode) {
-            initialArchiveCountText = initialCountNode.textContent.trim();
-        }
-
-        extractCardData();
+    if (facetwpListingEnabled) {
+        parseFilterStateFromUrl();
         buildFilterPanel();
-        applyFilters();
+        updateFilterButtonState();
+        updateApplyButtonState();
+        window.setTimeout(updateApplyButtonState, 0);
     }
 
     setMode(getInitialMode());
