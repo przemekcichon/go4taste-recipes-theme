@@ -185,7 +185,13 @@
                                 <p>{{ post_item.preview.length(22).read_more('') }}</p>
                                 <div class="recipe-teaser-card__meta">
                                     <span>~{{ post_item.meta('recipe_time_total')|default('35 min') }}</span>
-                                    <span>{{ post_item.meta('recipe_difficulty')|default('Latwy') }}</span>
+                                    {% set difficulty_raw = post_item.meta('recipe_difficulty')|default('Latwy')|lower %}
+                                    {% set difficulty_label = difficulty_raw in ['easy', 'latwy', 'łatwy']
+                                        ? 'Łatwy'
+                                        : (difficulty_raw in ['medium', 'sredni', 'średni']
+                                            ? 'Średni'
+                                            : (difficulty_raw in ['hard', 'trudny'] ? 'Trudny' : post_item.meta('recipe_difficulty')|default('Latwy'))) %}
+                                    <span>{{ difficulty_label }}</span>
                                 </div>
                             </div>
                         </a>

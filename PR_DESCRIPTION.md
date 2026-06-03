@@ -1,37 +1,62 @@
-﻿# PR: Theme override template dla ads strip i line-clamp tytulow produktow
+﻿# PR: Theme recipe UX polish - archive hero sanitize, edit shortcut, step rendering fallback
 
-**Branch:** `feature/ads-strip-template` -> `main`
+**Branch:** `feature/archive-hero-description-sanitize` -> `main`
 
 ## Motywacja
 
-Frontend strony przepisu pokazywal sekcje reklamowa z dummy produktami (hardcodowane dane testowe) zamiast realnych produktow wybranych w edytorze. Szablon `single-recipe.twig` zawieral stala liste fallbackowych produktow wyswietlanych zawsze gdy `recipe.ads.products` bylo puste. Brakowalo tez theme override template wymaganego przez render callback pluginu `go4taste-ads`.
+Theme potrzebowal kilku porzadkowych poprawek w widokach przepisu:
+
+- opis hero na archiwum i stronie glownej mial byc wyswietlany bez niespójnych surowych wartosci,
+- single recipe mial lepiej obslugiwac rozne ksztalty danych krokow,
+- pasek quick actions mial dostac bezposredni link do edycji aktualnego przepisu,
+- override template dla ads strip mial pobierac realne dane produktow z pluginu, a nie polegac na starym hardcodowanym flow.
 
 ## Zakres zmian
 
-### `go4taste-ads/inline-banner.php` (nowy plik)
-- Theme override template dla bloku `go4taste-ads/inline-banner`.
-- Wykrywany automatycznie przez render callback pluginu (sciezka `{theme}/go4taste-ads/inline-banner.php`).
-- Renderuje sekcje `g4t-ads-strip` z kartami produktow, nawigacja slidera i oznaczeniem autopromocji.
-- Pobiera dane produktow przez `Go4Taste_Ads::get_instance()->fetch_product_data()`.
-- Markup zgodny z istniejacymi klasami CSS i atrybutami `data-g4t-ads-*` obsługiwanymi przez `go4taste-ads-slider-only.js`.
+### `functions.php`
+- Dodano helper do wyszukiwania strony kreatora przepisu po template slug `g4t-recipe-creator`.
+- Dodano generator konfiguracji quick actions dla widoku pojedynczego przepisu.
+- Do `go4tasteQuickActionsConfig` przekazywany jest nowy blok `recipeEdit` z URL-em do edycji wpisu.
+
+### `assets/js/quick-actions-bar.js`
+- Dodano przycisk/link `Edytuj` na single recipe pages, gdy uzytkownik moze edytowac dany przepis.
+- Pasek quick actions utrzymuje poprawny stan widocznosci, gdy istnieje akcja edycji.
+
+### `assets/css/quick-actions-bar.css`
+- Dodano styl dla etykiety przycisku edycji (`.quick-actions-bar__edit-text`).
+
+### `go4taste-ads/inline-banner.php`
+- Theme override template dla bloku `go4taste-ads/inline-banner` pobiera teraz dane produktow przez filtr `go4taste_ads_get_product_data`.
+- Dodano fallback do `g4t_core_fetch_product_data()` dla srodowisk, w ktorych provider filtrow moze byc jeszcze niedostepny.
+- Markup nadal pozostaje zgodny z klasami i atrybutami slidera ads.
+
+### `views/archive-recipe.twig`
+- Zastapiono surowe wyswietlanie `recipe_difficulty` znormalizowanymi etykietami:
+	- `Easy / Latwy / Łatwy` -> `Łatwy`
+	- `Medium / Sredni / Średni` -> `Średni`
+	- `Hard / Trudny` -> `Trudny`
+
+### `views/home.twig`
+- Analogiczna normalizacja poziomu trudnosci jak w archiwum przepisow.
+- Karty na home pokazują teraz spójne, lokalizowane etykiety zamiast surowych wartości z meta.
 
 ### `views/single-recipe.twig`
-- Usunieto hardcodowana tablice `fallback_ads_products` z 4 dummy produktami.
-- Sekcja `g4t-ads-strip` renderowana warunkowo (`{% if recipe_ads_products|length %}`).
-- Przy braku danych sekcja reklam nie pojawia sie w ogole.
-
-### `assets/css/single-recipe-go4taste-ads.css`
-- Dodano `display: -webkit-box`, `-webkit-line-clamp: 2`, `overflow: hidden` do `.g4t-ads-strip .g4t-product-card__title`.
-- Tytuly produktow dluzsze niz dwie linie sa obcinane wielokropkiem.
+- Poziom trudnosci w hero jest normalizowany do tych samych etykiet co na archive/home.
+- Logika krokow zostala uodporniona na kilka ksztaltow danych:
+	- `title` lub `heading` jako tytul kroku,
+	- `description` jako tekst wielolinijkowy,
+	- `tip` jako opcjonalna wskazowka,
+	- `images` albo `imageUrl` jako media kroku.
+- Alt dla obrazow krokow korzysta z wyliczonego tytulu kroku, gdy jest dostepny.
 
 ## Weryfikacja
 
-- Strona przepisu z przypisanym blokiem ads wyswietla realne produkty ze sklepu.
-- Strona przepisu bez bloku ads lub bez wybranych produktow nie wyswietla sekcji reklamowej.
-- Tytuly produktow nie przekraczaja 2 linii w karcie produktu.
-- Slider nawigacja (przyciski <- ->) dziala poprawnie przy >1 produkcie.
+- Single recipe pokazuje poprawnie przycisk `Edytuj`, gdy uzytkownik ma uprawnienia.
+- Widoki archive i home wyswietlaja spójne etykiety poziomu trudnosci zamiast surowych slugow/wartosci.
+- Single recipe poprawnie renderuje kroki niezaleznie od tego, czy backend wysyla `title`, `heading`, `description`, `images` czy `imageUrl`.
+- Theme override ads strip pobiera dane przez filtr i zachowuje fallback, jesli provider nie jest dostepny.
 
 ## Zaleznosci
 
-- Wymaga pluginu `go4taste-ads` z render callback (branch `feature/theme-banner-templates`).
-- Wymaga pluginu `go4taste-recipes-plugin` z poprawka sync atrybutow ads (branch `feature/ads-block-sync-and-product-ids`).
+- Wymaga pluginu `go4taste-ads` z render callback i filtrem `go4taste_ads_get_product_data`.
+- Wymaga pluginu `go4taste-recipes-plugin` z dostepna strona kreatora `g4t-recipe-creator` oraz funkcjami kontroli uprawnien do edycji przepisu.
