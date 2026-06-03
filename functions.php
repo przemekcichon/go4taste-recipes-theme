@@ -32,6 +32,66 @@ function go4taste_recipes_theme_current_url(): string {
 }
 
 /**
+ * Format stored recipe time value (minutes) to human-readable string.
+ *
+ * Accepts current numeric contract (e.g. "80") and legacy values
+ * like "1 h 20 min" for backward compatibility.
+ *
+ * @param mixed $value Raw time value from view model.
+ */
+function go4taste_recipes_theme_format_minutes_human( $value ): string {
+	if ( ! is_scalar( $value ) ) {
+		return '-';
+	}
+
+	$raw = trim( (string) $value );
+	if ( '' === $raw ) {
+		return '-';
+	}
+
+	$total_minutes = 0;
+
+	if ( ctype_digit( $raw ) ) {
+		$total_minutes = (int) $raw;
+	} else {
+		$input = strtolower( $raw );
+		$hours = 0;
+		$mins  = 0;
+
+		if ( preg_match( '/(\d+)\s*h/', $input, $hours_match ) ) {
+			$hours = (int) $hours_match[1];
+		}
+
+		if ( preg_match( '/(\d+)\s*min/', $input, $mins_match ) ) {
+			$mins = (int) $mins_match[1];
+		}
+
+		$total_minutes = ( $hours * 60 ) + $mins;
+
+		if ( $total_minutes <= 0 && is_numeric( $raw ) ) {
+			$total_minutes = (int) $raw;
+		}
+	}
+
+	if ( $total_minutes <= 0 ) {
+		return '-';
+	}
+
+	$hours = (int) floor( $total_minutes / 60 );
+	$mins  = $total_minutes % 60;
+
+	if ( $hours > 0 && $mins > 0 ) {
+		return $hours . ' h ' . $mins . ' min';
+	}
+
+	if ( $hours > 0 ) {
+		return $hours . ' h';
+	}
+
+	return $mins . ' min';
+}
+
+/**
  * Register the FacetWP facets required by the recipe quick actions filter.
  *
  * These facets are intentionally defined in code so the theme owns the facet

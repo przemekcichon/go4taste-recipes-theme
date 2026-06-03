@@ -93,15 +93,15 @@
                 <div class="recipe-hero__time" aria-label="Czasy przygotowania">
                     <div class="recipe-hero__time-item">
                         <span class="recipe-hero__time-label">Przygotowanie</span>
-                        <span class="recipe-hero__time-value">{{ recipe_times.prep|default('-') }} min</span>
+                        <span class="recipe-hero__time-value">{{ function('go4taste_recipes_theme_format_minutes_human', recipe_times.prep|default('')) }}</span>
                     </div>
                     <div class="recipe-hero__time-item">
                         <span class="recipe-hero__time-label">Gotowanie</span>
-                        <span class="recipe-hero__time-value">{{ recipe_times.cook|default('-') }} min</span>
+                        <span class="recipe-hero__time-value">{{ function('go4taste_recipes_theme_format_minutes_human', recipe_times.cook|default('')) }}</span>
                     </div>
                     <div class="recipe-hero__time-item">
                         <span class="recipe-hero__time-label">Calkowity czas</span>
-                        <span class="recipe-hero__time-value">{{ recipe_times.total|default('-') }} min</span>
+                        <span class="recipe-hero__time-value">{{ function('go4taste_recipes_theme_format_minutes_human', recipe_times.total|default('')) }}</span>
                     </div>
                 </div>
             </div>
