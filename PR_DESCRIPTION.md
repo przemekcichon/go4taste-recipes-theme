@@ -17,6 +17,7 @@ Theme potrzebowal kilku porzadkowych poprawek w widokach przepisu:
 - Dodano helper do wyszukiwania strony kreatora przepisu po template slug `g4t-recipe-creator`.
 - Dodano generator konfiguracji quick actions dla widoku pojedynczego przepisu.
 - Do `go4tasteQuickActionsConfig` przekazywany jest nowy blok `recipeEdit` z URL-em do edycji wpisu.
+- Dodano guard dla rejestracji facetow FacetWP: jesli stale taksonomii recipe nie sa jeszcze zdefiniowane, funkcja zwraca istniejace facety bez modyfikacji (bez warningow/fatal przy wczesnym ladowaniu hooka).
 
 ### `assets/js/quick-actions-bar.js`
 - Dodano przycisk/link `Edytuj` na single recipe pages, gdy uzytkownik moze edytowac dany przepis.
@@ -55,6 +56,7 @@ Theme potrzebowal kilku porzadkowych poprawek w widokach przepisu:
 - Widoki archive i home wyswietlaja spójne etykiety poziomu trudnosci zamiast surowych slugow/wartosci.
 - Single recipe poprawnie renderuje kroki niezaleznie od tego, czy backend wysyla `title`, `heading`, `description`, `images` czy `imageUrl`.
 - Theme override ads strip pobiera dane przez filtr i zachowuje fallback, jesli provider nie jest dostepny.
+- Rejestracja facetow FacetWP nie powoduje bledow na requestach, w ktorych stale taksonomii recipes nie sa jeszcze dostepne.
 
 ## Zaleznosci
 

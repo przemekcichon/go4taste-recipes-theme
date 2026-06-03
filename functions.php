@@ -41,6 +41,10 @@ function go4taste_recipes_theme_current_url(): string {
  * @return array<int,array<string,mixed>>
  */
 function go4taste_recipes_theme_register_facetwp_facets( array $facets ): array {
+	if ( ! defined( 'G4T_MEAL_TYPE_TAXONOMY' ) ) {
+		return $facets;
+	}
+
 	$code_facets = array(
 		array(
 			'label'          => __( 'Typ dania', 'go4taste-recipes-theme' ),
