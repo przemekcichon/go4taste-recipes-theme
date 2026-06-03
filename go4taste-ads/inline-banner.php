@@ -16,13 +16,8 @@ if ( empty( $products_attr ) ) {
     return;
 }
 
-$options  = get_option( 'go4taste_ads_options' );
-$p_value  = isset( $options['p_parameter_value'] ) ? (string) $options['p_parameter_value'] : '';
-$lang     = isset( $options['prestashop_lang'] ) ? (string) $options['prestashop_lang'] : 'pl';
-$api_type = isset( $options['api_type'] ) ? (string) $options['api_type'] : 'prestashop_1_5';
-$api_url  = isset( $options['api_url'] ) ? (string) $options['api_url'] : '';
-
-$plugin_instance = Go4Taste_Ads::get_instance();
+$options        = get_option( 'go4taste_ads_options' );
+$options        = is_array( $options ) ? $options : array();
 $products_data   = array();
 
 foreach ( $products_attr as $product_entry ) {
@@ -31,7 +26,13 @@ foreach ( $products_attr as $product_entry ) {
         continue;
     }
 
-    $data = $plugin_instance->fetch_product_data( $product_id, $p_value, $lang, $api_type, $api_url );
+    $data = apply_filters( 'go4taste_ads_get_product_data', null, $product_id );
+
+    // Fallback for environments where filter providers may be unavailable.
+    if ( ! $data && function_exists( 'g4t_core_fetch_product_data' ) ) {
+        $data = g4t_core_fetch_product_data( $product_id, $options );
+    }
+
     if ( $data ) {
         $products_data[] = $data;
     }

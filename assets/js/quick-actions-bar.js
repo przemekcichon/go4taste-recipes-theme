@@ -10,6 +10,7 @@
     var filterButton = document.createElement("button");
     var printButton = document.createElement("button");
     var shareButton = document.createElement("button");
+    var editButton = document.createElement("a");
     var sharePanel = document.createElement("div");
     var shareMailButton = document.createElement("button");
     var shareFacebookButton = document.createElement("button");
@@ -31,6 +32,7 @@
     var scrollDeltaThreshold = 10;
     var topRevealOffset = 24;
     var facetwpCountRequestToken = 0;
+    var hasRecipeEditAction = false;
     var recipeListingState = {
         enabled: false,
         baseUrl: "",
@@ -53,6 +55,7 @@
 
     var quickActionsConfig = window.go4tasteQuickActionsConfig || {};
     var dynamicOptions = quickActionsConfig.options || {};
+    var recipeEditConfig = quickActionsConfig.recipeEdit || {};
 
     var DEFAULT_MEAL_TYPE_OPTIONS = [];
     var DEFAULT_TIME_OPTIONS = [];
@@ -215,7 +218,7 @@
         showRecipeQuickActions = (window.matchMedia && window.matchMedia("(max-width: " + recipeActionsBreakpoint + "px)").matches)
             || window.innerWidth <= recipeActionsBreakpoint;
 
-        quickActionsBarHost.classList.toggle("quick-actions-bar--with-recipe-actions", showRecipeQuickActions);
+        quickActionsBarHost.classList.toggle("quick-actions-bar--with-recipe-actions", showRecipeQuickActions || hasRecipeEditAction);
         printButton.hidden = !showRecipeQuickActions;
         shareButton.hidden = !showRecipeQuickActions;
 
@@ -839,6 +842,16 @@
     }
 
     if (hasSingleRecipePage) {
+        hasRecipeEditAction = Boolean(recipeEditConfig && recipeEditConfig.enabled && typeof recipeEditConfig.url === "string" && recipeEditConfig.url !== "");
+
+        if (hasRecipeEditAction) {
+            editButton.className = "quick-actions-bar__button quick-actions-bar__button--recipe-action quick-actions-bar__button--edit";
+            editButton.setAttribute("aria-label", "Edytuj wpis");
+            editButton.setAttribute("href", recipeEditConfig.url);
+            editButton.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><path d='M12 20h9'/><path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/></svg><span class='quick-actions-bar__edit-text'>Edytuj</span>";
+            quickActionsBarHost.appendChild(editButton);
+        }
+
         printButton.className = "quick-actions-bar__button quick-actions-bar__button--recipe-action quick-actions-bar__button--print";
         printButton.type = "button";
         printButton.setAttribute("aria-label", "Drukuj przepis");

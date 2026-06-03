@@ -77,7 +77,13 @@
                         <span class="recipe-hero__pill recipe-hero__pill--date">{{ recipe_data.date.label }}: {{ recipe_data.date.value }}</span>
                     {% endif %}
                     {% if recipe_data and recipe_data.difficulty %}
-                        <span class="recipe-hero__pill">Poziom: {{ recipe_data.difficulty }}</span>
+                        {% set difficulty_raw = recipe_data.difficulty|lower %}
+                        {% set difficulty_label = difficulty_raw in ['easy', 'latwy', 'łatwy']
+                            ? 'Łatwy'
+                            : (difficulty_raw in ['medium', 'sredni', 'średni']
+                                ? 'Średni'
+                                : (difficulty_raw in ['hard', 'trudny'] ? 'Trudny' : recipe_data.difficulty)) %}
+                        <span class="recipe-hero__pill">Poziom: {{ difficulty_label }}</span>
                     {% endif %}
                     {% if servings_text %}
                         <span class="recipe-hero__pill">Porcje: {{ servings_text }}</span>
@@ -159,13 +165,20 @@
                                         <label class="step-row" for="step-{{ loop.index }}">
                                             <input id="step-{{ loop.index }}" class="step-check" type="checkbox" aria-label="Oznacz krok {{ loop.index }} jako wykonany">
                                             <div class="step-content">
-                                                {% if step.title is defined and step.title %}
-                                                    <span class="step-title">{{ step.title }}</span>
+                                                {% set step_title = '' %}
+                                                {% if step is iterable and step.title is defined and step.title %}
+                                                    {% set step_title = step.title %}
+                                                {% elseif step is iterable and step.heading is defined and step.heading %}
+                                                    {% set step_title = step.heading %}
+                                                {% endif %}
+
+                                                {% if step_title %}
+                                                    <span class="step-title">{{ step_title }}</span>
                                                 {% else %}
                                                     <span class="step-title">Krok {{ loop.index }}</span>
                                                 {% endif %}
 
-                                                {% if step.description is defined %}
+                                                {% if step is iterable and step.description is defined %}
                                                     {% set step_description_lines = step.description|replace({"\r\n": "\n", "\r": "\n"})|split('\n') %}
                                                     <div class="step-text">
                                                         {% for line in step_description_lines %}
@@ -179,14 +192,21 @@
                                                     <div class="step-text"><p>{{ step }}</p></div>
                                                 {% endif %}
 
-                                                {% if step.tip is defined and step.tip %}
+                                                {% if step is iterable and step.tip is defined and step.tip %}
                                                     <div class="step-tip">Wskazowka: {{ step.tip }}</div>
                                                 {% endif %}
 
-                                                {% if step.images is defined and step.images %}
-                                                    {% for image_url in step.images %}
+                                                {% set step_images = [] %}
+                                                {% if step is iterable and step.images is defined and step.images %}
+                                                    {% set step_images = step.images %}
+                                                {% elseif step is iterable and step.imageUrl is defined and step.imageUrl %}
+                                                    {% set step_images = [step.imageUrl] %}
+                                                {% endif %}
+
+                                                {% if step_images %}
+                                                    {% for image_url in step_images %}
                                                         <figure class="step-media">
-                                                            <img src="{{ image_url|e('esc_url') }}" alt="{{ step.title is defined and step.title ? step.title : ('Krok ' ~ loop.parent.loop.index) }}" loading="lazy">
+                                                            <img src="{{ image_url|e('esc_url') }}" alt="{{ step_title ? step_title : ('Krok ' ~ loop.parent.loop.index) }}" loading="lazy">
                                                         </figure>
                                                     {% endfor %}
                                                 {% endif %}

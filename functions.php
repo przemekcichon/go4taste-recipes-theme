@@ -453,6 +453,87 @@ function go4taste_recipes_theme_get_quick_actions_filter_options(): array {
 }
 
 /**
+ * Resolve recipe creator page URL by assigned page template slug.
+ */
+function go4taste_recipes_theme_get_recipe_creator_page_url(): string {
+	$pages = get_posts(
+		array(
+			'post_type'      => 'page',
+			'post_status'    => array( 'publish', 'private' ),
+			'posts_per_page' => 1,
+			'meta_key'       => '_wp_page_template',
+			'meta_value'     => 'g4t-recipe-creator',
+			'orderby'        => 'menu_order title',
+			'order'          => 'ASC',
+			'fields'         => 'ids',
+		)
+	);
+
+	if ( empty( $pages ) || ! is_array( $pages ) ) {
+		return '';
+	}
+
+	$page_id = (int) $pages[0];
+	if ( $page_id <= 0 ) {
+		return '';
+	}
+
+	$permalink = get_permalink( $page_id );
+	return is_string( $permalink ) ? $permalink : '';
+}
+
+/**
+ * Build quick actions recipe edit config for single recipe views.
+ *
+ * @param string $source_post_type Source recipe post type.
+ * @return array{enabled:bool,url:string}
+ */
+function go4taste_recipes_theme_get_recipe_edit_quick_action( string $source_post_type ): array {
+	if ( ! is_singular( $source_post_type ) ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	$post_id = get_queried_object_id();
+	if ( $post_id <= 0 ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	$can_create = function_exists( 'g4t_current_user_can_create_recipe' )
+		? g4t_current_user_can_create_recipe()
+		: current_user_can( 'edit_posts' );
+
+	$can_edit_this = function_exists( 'g4t_can_user_edit_recipe' )
+		? g4t_can_user_edit_recipe( (int) $post_id )
+		: current_user_can( 'edit_post', $post_id );
+
+	if ( ! $can_create || ! $can_edit_this ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	$creator_page_url = go4taste_recipes_theme_get_recipe_creator_page_url();
+	if ( '' === $creator_page_url ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	return array(
+		'enabled' => true,
+		'url'     => add_query_arg( 'post_id', (string) $post_id, $creator_page_url ),
+	);
+}
+
+/**
  * Enqueue full prototype assets for recipe views.
  */
 function go4taste_recipes_theme_enqueue_assets() {
@@ -618,7 +699,8 @@ function go4taste_recipes_theme_enqueue_assets() {
 		'go4taste-recipes-quick-actions-bar',
 		'go4tasteQuickActionsConfig',
 		array(
-			'options' => go4taste_recipes_theme_get_quick_actions_filter_options(),
+			'options'    => go4taste_recipes_theme_get_quick_actions_filter_options(),
+			'recipeEdit' => go4taste_recipes_theme_get_recipe_edit_quick_action( (string) $source_post_type ),
 		)
 	);
 }
