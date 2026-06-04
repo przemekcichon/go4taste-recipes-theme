@@ -11,6 +11,7 @@
     var printButton = document.createElement("button");
     var shareButton = document.createElement("button");
     var editButton = document.createElement("a");
+    var addButton = document.createElement("a");
     var sharePanel = document.createElement("div");
     var shareMailButton = document.createElement("button");
     var shareFacebookButton = document.createElement("button");
@@ -33,6 +34,7 @@
     var topRevealOffset = 24;
     var facetwpCountRequestToken = 0;
     var hasRecipeEditAction = false;
+    var hasRecipeAddAction = false;
     var recipeListingState = {
         enabled: false,
         baseUrl: "",
@@ -56,6 +58,7 @@
     var quickActionsConfig = window.go4tasteQuickActionsConfig || {};
     var dynamicOptions = quickActionsConfig.options || {};
     var recipeEditConfig = quickActionsConfig.recipeEdit || {};
+    var recipeAddConfig = quickActionsConfig.recipeAdd || {};
 
     var DEFAULT_MEAL_TYPE_OPTIONS = [];
     var DEFAULT_TIME_OPTIONS = [];
@@ -218,7 +221,7 @@
         showRecipeQuickActions = (window.matchMedia && window.matchMedia("(max-width: " + recipeActionsBreakpoint + "px)").matches)
             || window.innerWidth <= recipeActionsBreakpoint;
 
-        quickActionsBarHost.classList.toggle("quick-actions-bar--with-recipe-actions", showRecipeQuickActions || hasRecipeEditAction);
+        quickActionsBarHost.classList.toggle("quick-actions-bar--with-recipe-actions", showRecipeQuickActions || hasRecipeEditAction || hasRecipeAddAction);
         printButton.hidden = !showRecipeQuickActions;
         shareButton.hidden = !showRecipeQuickActions;
 
@@ -839,6 +842,16 @@
         filterButton.setAttribute("aria-controls", "quick-actions-filter-panel");
         filterButton.setAttribute("aria-expanded", "false");
         quickActionsBarHost.appendChild(filterButton);
+    }
+
+    hasRecipeAddAction = Boolean(recipeAddConfig && recipeAddConfig.enabled && typeof recipeAddConfig.url === "string" && recipeAddConfig.url !== "");
+
+    if (hasRecipeAddAction) {
+        addButton.className = "quick-actions-bar__button quick-actions-bar__button--recipe-action quick-actions-bar__button--add";
+        addButton.setAttribute("aria-label", "Dodaj przepis");
+        addButton.setAttribute("href", recipeAddConfig.url);
+        addButton.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg><span class='quick-actions-bar__add-text'>Dodaj</span>";
+        quickActionsBarHost.appendChild(addButton);
     }
 
     if (hasSingleRecipePage) {

@@ -1,64 +1,99 @@
-﻿# PR: Theme recipe UX polish - archive hero sanitize, edit shortcut, step rendering fallback
+# PR: Theme UX improvements — add-recipe action, Polish labels, breadcrumbs, copyright
 
-**Branch:** `feature/archive-hero-description-sanitize` -> `main`
+**Branch:** `feature/ui-tidy-quick-actions-copy-breadcrumbs` -> `main`
 
-## Motywacja
+## Implementation status
 
-Theme potrzebowal kilku porzadkowych poprawek w widokach przepisu:
+| Stage | Status | Description |
+|---|---|---|
+| Quick action: Dodaj przepis | ✅ Done | Button for admins/editors on all page types |
+| Polish characters in .twig | ✅ Done | All missing diacritics fixed in 3 templates |
+| Breadcrumbs: remove Blog | ✅ Done | "Blog" link removed from single-recipe breadcrumb |
+| Copyright update | ✅ Done | Replaced Feast Design Co. with I.Dyląg Allegro Sp.j. |
 
-- opis hero na archiwum i stronie glownej mial byc wyswietlany bez niespójnych surowych wartosci,
-- single recipe mial lepiej obslugiwac rozne ksztalty danych krokow,
-- pasek quick actions mial dostac bezposredni link do edycji aktualnego przepisu,
-- override template dla ads strip mial pobierac realne dane produktow z pluginu, a nie polegac na starym hardcodowanym flow.
+---
 
-## Zakres zmian
+## 1. Quick action: Dodaj przepis
 
-### `functions.php`
-- Dodano helper do wyszukiwania strony kreatora przepisu po template slug `g4t-recipe-creator`.
-- Dodano generator konfiguracji quick actions dla widoku pojedynczego przepisu.
-- Do `go4tasteQuickActionsConfig` przekazywany jest nowy blok `recipeEdit` z URL-em do edycji wpisu.
-- Dodano guard dla rejestracji facetow FacetWP: jesli stale taksonomii recipe nie sa jeszcze zdefiniowane, funkcja zwraca istniejace facety bez modyfikacji (bez warningow/fatal przy wczesnym ladowaniu hooka).
+### What was done
 
-### `assets/js/quick-actions-bar.js`
-- Dodano przycisk/link `Edytuj` na single recipe pages, gdy uzytkownik moze edytowac dany przepis.
-- Pasek quick actions utrzymuje poprawny stan widocznosci, gdy istnieje akcja edycji.
+Added "Dodaj przepis" button to the Quick Actions Bar for logged-in users with recipe creation permission (administrators and editors). The button appears on all page types — archive, home, and single recipe — unlike the existing "Edytuj" button which is single-recipe-only.
 
-### `assets/css/quick-actions-bar.css`
-- Dodano styl dla etykiety przycisku edycji (`.quick-actions-bar__edit-text`).
+### Files changed
 
-### `go4taste-ads/inline-banner.php`
-- Theme override template dla bloku `go4taste-ads/inline-banner` pobiera teraz dane produktow przez filtr `go4taste_ads_get_product_data`.
-- Dodano fallback do `g4t_core_fetch_product_data()` dla srodowisk, w ktorych provider filtrow moze byc jeszcze niedostepny.
-- Markup nadal pozostaje zgodny z klasami i atrybutami slidera ads.
+**`functions.php`**
+- Added `go4taste_recipes_theme_get_recipe_add_quick_action()` — checks `g4t_current_user_can_create_recipe()` (falls back to `current_user_can('edit_posts')`), resolves creator page URL, returns `{enabled, url}`
+- Added `'recipeAdd'` key to `wp_localize_script` config
 
-### `views/archive-recipe.twig`
-- Zastapiono surowe wyswietlanie `recipe_difficulty` znormalizowanymi etykietami:
-	- `Easy / Latwy / Łatwy` -> `Łatwy`
-	- `Medium / Sredni / Średni` -> `Średni`
-	- `Hard / Trudny` -> `Trudny`
+**`assets/js/quick-actions-bar.js`**
+- Added `var addButton` element declaration
+- Added `var hasRecipeAddAction` flag and `var recipeAddConfig` config reader
+- Init block: resolves `hasRecipeAddAction`, renders button with plus-icon SVG and `.quick-actions-bar__add-text` label "Dodaj"
+- `updateRecipeQuickActionsVisibility()`: added `hasRecipeAddAction` to the `quick-actions-bar--with-recipe-actions` toggle condition
 
-### `views/home.twig`
-- Analogiczna normalizacja poziomu trudnosci jak w archiwum przepisow.
-- Karty na home pokazują teraz spójne, lokalizowane etykiety zamiast surowych wartości z meta.
+**`assets/css/quick-actions-bar.css`**
+- Added `.quick-actions-bar__add-text` to the shared text-label selector list
 
-### `views/single-recipe.twig`
-- Poziom trudnosci w hero jest normalizowany do tych samych etykiet co na archive/home.
-- Logika krokow zostala uodporniona na kilka ksztaltow danych:
-	- `title` lub `heading` jako tytul kroku,
-	- `description` jako tekst wielolinijkowy,
-	- `tip` jako opcjonalna wskazowka,
-	- `images` albo `imageUrl` jako media kroku.
-- Alt dla obrazow krokow korzysta z wyliczonego tytulu kroku, gdy jest dostepny.
+---
 
-## Weryfikacja
+## 2. Polish characters in .twig templates
 
-- Single recipe pokazuje poprawnie przycisk `Edytuj`, gdy uzytkownik ma uprawnienia.
-- Widoki archive i home wyswietlaja spójne etykiety poziomu trudnosci zamiast surowych slugow/wartosci.
-- Single recipe poprawnie renderuje kroki niezaleznie od tego, czy backend wysyla `title`, `heading`, `description`, `images` czy `imageUrl`.
-- Theme override ads strip pobiera dane przez filtr i zachowuje fallback, jesli provider nie jest dostepny.
-- Rejestracja facetow FacetWP nie powoduje bledow na requestach, w ktorych stale taksonomii recipes nie sa jeszcze dostepne.
+Fixed all user-visible strings with missing Polish diacritics.
 
-## Zaleznosci
+**`views/single-recipe.twig`**
+- `Jestes tutaj:` → `Jesteś tutaj:`
+- `Calkowity czas` → `Całkowity czas`
+- `Skladniki` (zakładka mobilna, nagłówek sekcji, aria-label) → `Składniki`
+- `Zrodlo przepisu` → `Źródło przepisu`
+- `Skladniki dostepne w naszym sklepie` → `Składniki dostępne w naszym sklepie`
+- `aria-label="Udostepnij przepis"` → `aria-label="Udostępnij przepis"`
+- `aria-label="Wyslij mailem" title="Wyslij mailem"` → `Wyślij mailem`
 
-- Wymaga pluginu `go4taste-ads` z render callback i filtrem `go4taste_ads_get_product_data`.
-- Wymaga pluginu `go4taste-recipes-plugin` z dostepna strona kreatora `g4t-recipe-creator` oraz funkcjami kontroli uprawnien do edycji przepisu.
+**`views/archive-recipe.twig`**
+- `Jestes tutaj:` → `Jesteś tutaj:`
+- `poziomy trudnosci` → `poziomy trudności`
+- `aria-label="Polecane artykuly z bloga"` → `aria-label="Polecane artykuły z bloga"`
+- `aria-label="Wybierz artykul"` → `aria-label="Wybierz artykuł"`
+
+**`views/home.twig`**
+- `Nowa strona glowna dla migracji przepisow` → `Nowa strona główna dla migracji przepisów`
+- `ktory prowadzi uzytkownika` → `który prowadzi użytkownika`
+- `Przegladaj przepisy` → `Przeglądaj przepisy`
+- `aria-label="Wyrozniony przepis"` → `aria-label="Wyróżniony przepis"`
+- `'Wyrozniony przepis'` (fallback string) → `'Wyróżniony przepis'`
+- `Przejdz do przepisu` → `Przejdź do przepisu`
+- `Brak przepisow` → `Brak przepisów`
+- `uzupelnic strone glowna` → `uzupełnić stronę główną`
+- `aria-label="Nawigacja stron listy przepisow"` → `aria-label="Nawigacja stron listy przepisów"`
+
+---
+
+## 3. Breadcrumbs: remove "Blog"
+
+**`views/single-recipe.twig`**
+
+Removed the "Blog" link from the breadcrumb trail. The breadcrumb now reads:
+
+```
+Jesteś tutaj: Przepisy / [tytuł przepisu]
+```
+
+instead of:
+
+```
+Jestes tutaj: Blog / Przepisy / [tytuł przepisu]
+```
+
+---
+
+## 4. Copyright update
+
+**`views/partial/site-footer.twig`**
+
+Replaced the Brunch Pro / Feast Design Co. attribution with the correct site owner:
+
+```
+Copyright © [year] – I.Dyląg Allegro Sp.j. – Wszystkie prawa zastrzeżone
+```
+
+Year remains dynamic (`{{ "now"|date("Y") }}`).

@@ -40,8 +40,7 @@
     {% endif %}
 
     <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
-        Jestes tutaj:
-        <a href="{{ site.url }}">Blog</a> /
+        Jesteś tutaj:
         <a href="{{ site.url }}/przepisy/">Przepisy</a> /
         {{ post.title }}
     </nav>
@@ -100,7 +99,7 @@
                         <span class="recipe-hero__time-value">{{ function('go4taste_recipes_theme_format_minutes_human', recipe_times.cook|default('')) }}</span>
                     </div>
                     <div class="recipe-hero__time-item">
-                        <span class="recipe-hero__time-label">Calkowity czas</span>
+                        <span class="recipe-hero__time-label">Całkowity czas</span>
                         <span class="recipe-hero__time-value">{{ function('go4taste_recipes_theme_format_minutes_human', recipe_times.total|default('')) }}</span>
                     </div>
                 </div>
@@ -119,13 +118,13 @@
     </section>
 
     <nav class="mobile-recipe-tabs site-container" aria-label="Nawigacja po sekcjach przepisu">
-        <button class="mobile-recipe-tabs__button is-active" type="button" data-target="sec-ingredients" aria-pressed="true">Skladniki</button>
+        <button class="mobile-recipe-tabs__button is-active" type="button" data-target="sec-ingredients" aria-pressed="true">Składniki</button>
         <button class="mobile-recipe-tabs__button" type="button" data-target="sec-preparation" aria-pressed="false">Przygotowanie</button>
     </nav>
 
     <div class="site-container">
         <div class="recipe-layout">
-            <aside class="recipe-share-rail" aria-label="Udostepnij przepis">
+            <aside class="recipe-share-rail" aria-label="Udostępnij przepis">
                 <ul class="recipe-share-rail__list">
                     <li>
                         <button class="recipe-share-rail__button" type="button" onclick="window.print()" aria-label="Drukuj przepis" title="Drukuj">
@@ -137,7 +136,7 @@
                         </button>
                     </li>
                     <li>
-                        <a class="recipe-share-rail__link" href="mailto:?subject={{ mail_subject }}&body=Sprawdz%20przepis:%20{{ share_url }}" aria-label="Wyslij mailem" title="Wyslij mailem">
+                        <a class="recipe-share-rail__link" href="mailto:?subject={{ mail_subject }}&body=Sprawdz%20przepis:%20{{ share_url }}" aria-label="Wyślij mailem" title="Wyślij mailem">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M4 4h16v16H4z" />
                                 <path d="m22 6-10 7L2 6" />
@@ -228,16 +227,16 @@
                     </section>
 
                     <section class="recipe-section recipe-section--source" aria-labelledby="sec-source">
-                        <h2 id="sec-source">Zrodlo przepisu</h2>
+                        <h2 id="sec-source">Źródło przepisu</h2>
                         <p><a href="{{ source_url|e('esc_url') }}" target="_blank" rel="noopener noreferrer">{{ source_label }}</a></p>
                     </section>
                 </article>
             </main>
 
-            <aside class="recipe-sidebar recipe-sidebar--sticky" id="sidebar-ingredients" aria-label="Skladniki przepisu">
+            <aside class="recipe-sidebar recipe-sidebar--sticky" id="sidebar-ingredients" aria-label="Składniki przepisu">
                 <div class="sticky-wrapper">
                     <section class="recipe-section recipe-section--ingredients" aria-labelledby="sec-ingredients">
-                        <h2 id="sec-ingredients">Skladniki</h2>
+                        <h2 id="sec-ingredients">Składniki</h2>
                         {% if recipe_ingredients_photo_url %}
                             <figure class="ingredients-photo">
                                 <img src="{{ recipe_ingredients_photo_url }}" alt="Przygotowane skladniki" loading="lazy">
@@ -283,7 +282,7 @@
                         <span class="g4t-ads-strip__promo-badge">Autopromocja</span>
                     </div>
                     <h2 id="g4t-ads-title" class="g4t-ads-strip__title">Produkty ze sklepu</h2>
-                    <p class="g4t-ads-strip__desc">Skladniki dostepne w naszym sklepie</p>
+                    <p class="g4t-ads-strip__desc">Składniki dostępne w naszym sklepie</p>
                 </div>
                 <div class="g4t-ads-strip__nav-group">
                     <button type="button" class="g4t-ads__nav g4t-ads__nav--prev" aria-label="Poprzednie produkty" data-g4t-ads-prev><span aria-hidden="true">&#8592;</span></button>

@@ -598,6 +598,39 @@ function go4taste_recipes_theme_get_recipe_edit_quick_action( string $source_pos
 }
 
 /**
+ * Build quick actions add-recipe config for users who can create recipes.
+ *
+ * Shown on all page types (archive, home, single) — not just single recipe.
+ *
+ * @return array{enabled:bool,url:string}
+ */
+function go4taste_recipes_theme_get_recipe_add_quick_action(): array {
+	$can_create = function_exists( 'g4t_current_user_can_create_recipe' )
+		? g4t_current_user_can_create_recipe()
+		: current_user_can( 'edit_posts' );
+
+	if ( ! $can_create ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	$creator_page_url = go4taste_recipes_theme_get_recipe_creator_page_url();
+	if ( '' === $creator_page_url ) {
+		return array(
+			'enabled' => false,
+			'url'     => '',
+		);
+	}
+
+	return array(
+		'enabled' => true,
+		'url'     => $creator_page_url,
+	);
+}
+
+/**
  * Enqueue full prototype assets for recipe views.
  */
 function go4taste_recipes_theme_enqueue_assets() {
@@ -765,6 +798,7 @@ function go4taste_recipes_theme_enqueue_assets() {
 		array(
 			'options'    => go4taste_recipes_theme_get_quick_actions_filter_options(),
 			'recipeEdit' => go4taste_recipes_theme_get_recipe_edit_quick_action( (string) $source_post_type ),
+			'recipeAdd'  => go4taste_recipes_theme_get_recipe_add_quick_action(),
 		)
 	);
 }

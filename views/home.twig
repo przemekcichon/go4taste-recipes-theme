@@ -8,8 +8,8 @@
         <div class="home-hero__inner site-container">
             <div class="home-hero__identity">
                 <p class="home-hero__eyebrow">Go4Taste Przepisy</p>
-                <h1 id="home-hero-title" class="home-hero__title">Nowa strona glowna dla migracji przepisow</h1>
-                <p class="home-hero__lead">Startowy widok, ktory prowadzi uzytkownika od kategorii i inspiracji do pojedynczego przepisu.</p>
+                <h1 id="home-hero-title" class="home-hero__title">Nowa strona główna dla migracji przepisów</h1>
+                <p class="home-hero__lead">Startowy widok, który prowadzi użytkownika od kategorii i inspiracji do pojedynczego przepisu.</p>
 
                 {% if recipe_home.active_filter_tags is not empty %}
                     <nav class="home-hero__chips" aria-label="Aktualnie wybrane filtry">
@@ -22,20 +22,20 @@
                 {% endif %}
 
                 <div class="home-hero__cta-row">
-                    <a class="home-cta home-cta--primary" href="#przepisy">Przegladaj przepisy</a>
+                    <a class="home-cta home-cta--primary" href="#przepisy">Przeglądaj przepisy</a>
                     <a class="home-cta home-cta--ghost" href="{{ site.url }}">Zobacz nowy przepis</a>
                 </div>
             </div>
 
-            <aside class="home-hero__feature" aria-label="Wyrozniony przepis">
+            <aside class="home-hero__feature" aria-label="Wyróżniony przepis">
                 {% set featured = posts|length ? posts|first : null %}
                 {% if featured and featured.thumbnail %}
                     <img src="{{ featured.thumbnail.src|e('esc_url') }}" alt="{{ featured.title }}" loading="eager">
                 {% endif %}
-                <h2>{{ featured ? featured.title : 'Wyrozniony przepis' }}</h2>
+                <h2>{{ featured ? featured.title : 'Wyróżniony przepis' }}</h2>
                 <p>{{ featured ? featured.preview.length(15).read_more('') : 'Nowe inspiracje z kuchni Go4Taste.' }}</p>
                 {% if featured %}
-                    <a class="home-hero__feature-link" href="{{ featured.link|e('esc_url') }}">Przejdz do przepisu</a>
+                    <a class="home-hero__feature-link" href="{{ featured.link|e('esc_url') }}">Przejdź do przepisu</a>
                 {% endif %}
             </aside>
         </div>
@@ -75,15 +75,15 @@
             {% else %}
                 <li class="home-recipe-card">
                     <div class="home-recipe-card__body">
-                        <h3>Brak przepisow</h3>
-                        <p>Dodaj pierwszy przepis, aby uzupelnic strone glowna.</p>
+                        <h3>Brak przepisów</h3>
+                        <p>Dodaj pierwszy przepis, aby uzupełnić stronę główną.</p>
                     </div>
                 </li>
             {% endfor %}
         </ul>
 
         {% if posts.pagination.pages is not empty %}
-            <nav class="archive-pagination" aria-label="Nawigacja stron listy przepisow">
+            <nav class="archive-pagination" aria-label="Nawigacja stron listy przepisów">
                 {% for page in posts.pagination.pages %}
                     {% if page.link %}
                         <a class="archive-pagination__item" href="{{ page.link|e('esc_url') }}">{{ page.title }}</a>

@@ -73,6 +73,7 @@
 .quick-actions-bar__print-text,
 .quick-actions-bar__share-text,
 .quick-actions-bar__edit-text,
+.quick-actions-bar__add-text,
 .quick-actions-bar__mode-text {
     font-size: 0.74rem;
     font-variant-caps: normal;
