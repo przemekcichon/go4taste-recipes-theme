@@ -46,7 +46,7 @@
     ] %}
 
     <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
-        Jestes tutaj:
+        Jesteś tutaj:
         <a href="{{ site.url }}/przepisy/">Przepisy</a> /
         <span>{{ archive_title }}</span>
     </nav>
@@ -85,7 +85,7 @@
                     </li>
                     <li class="g4t-archive-hero-stats__item">
                         <span class="g4t-archive-hero-stats__value">3</span>
-                        <span class="g4t-archive-hero-stats__label">poziomy trudnosci</span>
+                        <span class="g4t-archive-hero-stats__label">poziomy trudności</span>
                     </li>
                 </ul>
                 {% if term is defined and term %}
@@ -131,7 +131,7 @@
                 
                 {% if hero_blog_posts is not empty %}
                     <div class="g4t-archive-hero-blog-slider g4t-archive-hero-visual__blog-slider" data-g4t-archive-hero-blog-slider>
-                        <div class="g4t-archive-hero-visual__blog-viewport" tabindex="0" aria-label="Polecane artykuly z bloga">
+                        <div class="g4t-archive-hero-visual__blog-viewport" tabindex="0" aria-label="Polecane artykuły z bloga">
                             <ul class="g4t-archive-hero-visual__blog-track">
                                 {% for blog_post in hero_blog_posts %}
                                     <li class="g4t-archive-hero-visual__blog-slide">
@@ -151,7 +151,7 @@
                                 {% endfor %}
                             </ul>
                         </div>
-                        <div class="g4t-ads-hero__dots g4t-archive-hero-visual__blog-dots" aria-label="Wybierz artykul"></div>
+                        <div class="g4t-ads-hero__dots g4t-archive-hero-visual__blog-dots" aria-label="Wybierz artykuł"></div>
                     </div>
                 {% endif %}
             </div>
