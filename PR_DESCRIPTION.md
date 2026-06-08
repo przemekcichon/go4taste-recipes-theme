@@ -1,99 +1,135 @@
-# PR: Theme UX improvements — add-recipe action, Polish labels, breadcrumbs, copyright
+# PR: Ingredient Sections — Grouped Ingredients Support (Theme)
 
-**Branch:** `feature/ui-tidy-quick-actions-copy-breadcrumbs` -> `main`
+**Branch:** `feature/ingredient-sections` → `main`
 
-## Implementation status
+**Companion PR:** `go4taste-recipes-plugin` — `feature/ingredient-sections`
+
+---
+
+## Goal
+
+Adapt the recipe template and styles to render ingredients in named sections (e.g. "Ciasto" + "Farsz") using the new unified `ingredient_sections[]` view model shape introduced in the plugin PR. Zero visual change for all existing single-list recipes.
+
+---
+
+## Design decisions
+
+| Decision | Choice | Reason |
+|---|---|---|
+| View model shape | Always `ingredient_sections[]` | Plugin always returns this shape — single-mode wraps flat list in one unnamed section (`title: null`) |
+| Template branching | None — one loop handles both modes | Section heading `<h3>` is only rendered when `section.title` is non-null; otherwise visually identical to the old flat list |
+| Existing `recipe_ingredients` variable | Removed | Replaced by `recipe_ingredient_sections`; old variable was pointing at the now-removed `ingredients` key |
+| `<h3>` vs `<h4>` | `<h3>` | Correct heading hierarchy under the `<h2>Składniki</h2>` heading |
+| Section title style | Uppercase label, `var(--c-meta)` | Matches `.recipe-servings` and `.recipe-section h2` visual language — a subtle separator, not a competing heading |
+
+---
+
+## Files changed
+
+### `views/single-recipe.twig`
+
+**Variable rename (line ~9):**
+```twig
+{# Before #}
+{% set recipe_ingredients = recipe_data.ingredients ?? [] %}
+
+{# After #}
+{% set recipe_ingredient_sections = recipe_data.ingredient_sections ?? [] %}
+```
+
+**Ingredient loop (lines ~246–270):**
+
+Replaced single flat `{% for ingredient in recipe_ingredients %}` loop with a two-level loop over sections and their items:
+
+```twig
+{% for section in recipe_ingredient_sections %}
+    {% set si = loop.index %}
+    {% if section.title %}
+        <h3 class="ingredients-section-title">{{ section.title }}</h3>
+    {% endif %}
+    <ul class="ingredients-list">
+        {% for ingredient in section.items %}
+            <li class="ingredient-item">
+                <label class="ingredient-row" for="ing-{{ si }}-{{ loop.index }}">
+                    ...
+                </label>
+            </li>
+        {% else %}
+            <li class="ingredient-item">Brak skladnikow.</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <ul class="ingredients-list">
+        <li class="ingredient-item">Brak skladnikow.</li>
+    </ul>
+{% endfor %}
+```
+
+The `id`/`for` attribute on checkbox + label uses `si-index` to stay unique across multiple sections (was previously just `loop.index`).
+
+---
+
+### `assets/css/single-recipe.css`
+
+**New rules — ingredient section titles:**
+
+```css
+/* ── Ingredient section titles (sections mode) ─────────────── */
+.ingredients-section-title {
+    color: var(--c-meta);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    margin: 20px 0 6px;
+    text-transform: uppercase;
+}
+
+/* First section title sits close below the servings line */
+.recipe-servings + .ingredients-section-title {
+    margin-top: 14px;
+}
+
+/* When multi-section: gap between end of one list and next title */
+.ingredients-list + .ingredients-section-title {
+    margin-top: 22px;
+}
+```
+
+**Print styles** (inside existing `@media print` block):
+
+```css
+.ingredients-section-title {
+    break-after: avoid;
+    page-break-after: avoid;
+}
+```
+
+Prevents a section heading from appearing stranded at the bottom of a printed page, separated from its ingredient list.
+
+---
+
+## Backward compatibility
+
+Single-mode recipes (all ~130 existing recipes) are unaffected:
+
+- Plugin view model always returns `ingredient_sections[]`
+- For single-mode recipes the array contains exactly **one section** with `title: null`
+- The `{% if section.title %}` check is false → no `<h3>` rendered
+- The `<ul class="ingredients-list">` renders identically to the old flat loop
+- All existing CSS for `.ingredients-list`, `.ingredient-row`, `.ingredient-check`, etc. is unchanged
+
+---
+
+## Implementation stages
 
 | Stage | Status | Description |
 |---|---|---|
-| Quick action: Dodaj przepis | ✅ Done | Button for admins/editors on all page types |
-| Polish characters in .twig | ✅ Done | All missing diacritics fixed in 3 templates |
-| Breadcrumbs: remove Blog | ✅ Done | "Blog" link removed from single-recipe breadcrumb |
-| Copyright update | ✅ Done | Replaced Feast Design Co. with I.Dyląg Allegro Sp.j. |
+| Template: variable + loop | ✅ Done | `recipe_ingredient_sections` loop with optional `<h3>` per section |
+| Styles: section title | ✅ Done | `.ingredients-section-title` with spacing and visual hierarchy |
+| Styles: print | ✅ Done | `break-after: avoid` on section titles |
 
 ---
 
-## 1. Quick action: Dodaj przepis
+## Merge readiness
 
-### What was done
-
-Added "Dodaj przepis" button to the Quick Actions Bar for logged-in users with recipe creation permission (administrators and editors). The button appears on all page types — archive, home, and single recipe — unlike the existing "Edytuj" button which is single-recipe-only.
-
-### Files changed
-
-**`functions.php`**
-- Added `go4taste_recipes_theme_get_recipe_add_quick_action()` — checks `g4t_current_user_can_create_recipe()` (falls back to `current_user_can('edit_posts')`), resolves creator page URL, returns `{enabled, url}`
-- Added `'recipeAdd'` key to `wp_localize_script` config
-
-**`assets/js/quick-actions-bar.js`**
-- Added `var addButton` element declaration
-- Added `var hasRecipeAddAction` flag and `var recipeAddConfig` config reader
-- Init block: resolves `hasRecipeAddAction`, renders button with plus-icon SVG and `.quick-actions-bar__add-text` label "Dodaj"
-- `updateRecipeQuickActionsVisibility()`: added `hasRecipeAddAction` to the `quick-actions-bar--with-recipe-actions` toggle condition
-
-**`assets/css/quick-actions-bar.css`**
-- Added `.quick-actions-bar__add-text` to the shared text-label selector list
-
----
-
-## 2. Polish characters in .twig templates
-
-Fixed all user-visible strings with missing Polish diacritics.
-
-**`views/single-recipe.twig`**
-- `Jestes tutaj:` → `Jesteś tutaj:`
-- `Calkowity czas` → `Całkowity czas`
-- `Skladniki` (zakładka mobilna, nagłówek sekcji, aria-label) → `Składniki`
-- `Zrodlo przepisu` → `Źródło przepisu`
-- `Skladniki dostepne w naszym sklepie` → `Składniki dostępne w naszym sklepie`
-- `aria-label="Udostepnij przepis"` → `aria-label="Udostępnij przepis"`
-- `aria-label="Wyslij mailem" title="Wyslij mailem"` → `Wyślij mailem`
-
-**`views/archive-recipe.twig`**
-- `Jestes tutaj:` → `Jesteś tutaj:`
-- `poziomy trudnosci` → `poziomy trudności`
-- `aria-label="Polecane artykuly z bloga"` → `aria-label="Polecane artykuły z bloga"`
-- `aria-label="Wybierz artykul"` → `aria-label="Wybierz artykuł"`
-
-**`views/home.twig`**
-- `Nowa strona glowna dla migracji przepisow` → `Nowa strona główna dla migracji przepisów`
-- `ktory prowadzi uzytkownika` → `który prowadzi użytkownika`
-- `Przegladaj przepisy` → `Przeglądaj przepisy`
-- `aria-label="Wyrozniony przepis"` → `aria-label="Wyróżniony przepis"`
-- `'Wyrozniony przepis'` (fallback string) → `'Wyróżniony przepis'`
-- `Przejdz do przepisu` → `Przejdź do przepisu`
-- `Brak przepisow` → `Brak przepisów`
-- `uzupelnic strone glowna` → `uzupełnić stronę główną`
-- `aria-label="Nawigacja stron listy przepisow"` → `aria-label="Nawigacja stron listy przepisów"`
-
----
-
-## 3. Breadcrumbs: remove "Blog"
-
-**`views/single-recipe.twig`**
-
-Removed the "Blog" link from the breadcrumb trail. The breadcrumb now reads:
-
-```
-Jesteś tutaj: Przepisy / [tytuł przepisu]
-```
-
-instead of:
-
-```
-Jestes tutaj: Blog / Przepisy / [tytuł przepisu]
-```
-
----
-
-## 4. Copyright update
-
-**`views/partial/site-footer.twig`**
-
-Replaced the Brunch Pro / Feast Design Co. attribution with the correct site owner:
-
-```
-Copyright © [year] – I.Dyląg Allegro Sp.j. – Wszystkie prawa zastrzeżone
-```
-
-Year remains dynamic (`{{ "now"|date("Y") }}`).
+✅ Ready to merge — must be merged together with (or after) the companion plugin PR `feature/ingredient-sections`.

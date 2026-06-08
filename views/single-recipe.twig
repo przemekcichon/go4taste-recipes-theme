@@ -6,7 +6,7 @@
     {% set recipe_times = recipe_data and recipe_data.times is defined ? recipe_data.times : {} %}
     {% set recipe_servings = recipe_data and recipe_data.servings is defined ? recipe_data.servings : {} %}
     {% set recipe_source = recipe_data and recipe_data.source is defined ? recipe_data.source : {} %}
-    {% set recipe_ingredients = recipe_data and recipe_data.ingredients is defined ? recipe_data.ingredients : [] %}
+    {% set recipe_ingredient_sections = recipe_data and recipe_data.ingredient_sections is defined ? recipe_data.ingredient_sections : [] %}
     {% set recipe_ingredients_photo_url = recipe_data and recipe_data.ingredients_photo_url is defined ? recipe_data.ingredients_photo_url : '' %}
     {% set recipe_steps = recipe_data and recipe_data.steps is defined ? recipe_data.steps : [] %}
     {% set recipe_ads = recipe_data and recipe_data.ads is defined ? recipe_data.ads : {} %}
@@ -243,31 +243,41 @@
                             </figure>
                         {% endif %}
                         <p class="recipe-servings">Porcja: <strong>{{ servings_text ? servings_text ~ (servings_person_suffix ? ' ' ~ servings_person_suffix : '') : 'brak danych' }}</strong></p>
-                        <ul class="ingredients-list">
-                            {% for ingredient in recipe_ingredients %}
-                                <li class="ingredient-item">
-                                    <label class="ingredient-row" for="ing-{{ loop.index }}">
-                                        <input id="ing-{{ loop.index }}" class="ingredient-check" type="checkbox">
-                                        {% if ingredient.ingredient_note %}
-                                            <span class="ingredient-content">
+                        {% for section in recipe_ingredient_sections %}
+                            {% set si = loop.index %}
+                            {% if section.title %}
+                                <h3 class="ingredients-section-title">{{ section.title }}</h3>
+                            {% endif %}
+                            <ul class="ingredients-list">
+                                {% for ingredient in section.items %}
+                                    <li class="ingredient-item">
+                                        <label class="ingredient-row" for="ing-{{ si }}-{{ loop.index }}">
+                                            <input id="ing-{{ si }}-{{ loop.index }}" class="ingredient-check" type="checkbox">
+                                            {% if ingredient.ingredient_note %}
+                                                <span class="ingredient-content">
+                                                    <span class="ingredient-text">
+                                                        <span class="ingredient-name">{{ ingredient.name }}</span>
+                                                        <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
+                                                    </span>
+                                                    <span class="ingredient-note">{{ ingredient.ingredient_note }}</span>
+                                                </span>
+                                            {% else %}
                                                 <span class="ingredient-text">
                                                     <span class="ingredient-name">{{ ingredient.name }}</span>
                                                     <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
                                                 </span>
-                                                <span class="ingredient-note">{{ ingredient.ingredient_note }}</span>
-                                            </span>
-                                        {% else %}
-                                            <span class="ingredient-text">
-                                                <span class="ingredient-name">{{ ingredient.name }}</span>
-                                                <span class="ingredient-amount">{% if ingredient.amount is not null %}{{ ingredient.amount }} {% endif %}{{ ingredient.unit }}</span>
-                                            </span>
-                                        {% endif %}
-                                    </label>
-                                </li>
-                            {% else %}
+                                            {% endif %}
+                                        </label>
+                                    </li>
+                                {% else %}
+                                    <li class="ingredient-item">Brak skladnikow.</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <ul class="ingredients-list">
                                 <li class="ingredient-item">Brak skladnikow.</li>
-                            {% endfor %}
-                        </ul>
+                            </ul>
+                        {% endfor %}
                     </section>
                 </div>
             </aside>
