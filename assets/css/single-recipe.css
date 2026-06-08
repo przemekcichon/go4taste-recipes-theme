@@ -115,6 +115,26 @@
     text-decoration: line-through;
 }
 
+/* ── Ingredient section titles (sections mode) ─────────────── */
+.ingredients-section-title {
+    color: var(--c-meta);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    margin: 20px 0 6px;
+    text-transform: uppercase;
+}
+
+/* First section title sits close below the servings line */
+.recipe-servings + .ingredients-section-title {
+    margin-top: 14px;
+}
+
+/* When multi-section: gap between end of one list and next title */
+.ingredients-list + .ingredients-section-title {
+    margin-top: 22px;
+}
+
 /* ── Tips ───────────────────────────────────────────────────── */
 .recipe-tips {
     background: var(--c-tip-bg);
@@ -421,6 +441,11 @@
     .recipe-section--preparation-box {
         break-inside: avoid;
         page-break-inside: avoid;
+    }
+
+    .ingredients-section-title {
+        break-after: avoid;
+        page-break-after: avoid;
     }
 
     .recipe-hero__title,
