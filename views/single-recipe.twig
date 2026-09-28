@@ -39,11 +39,7 @@
         </section>
     {% endif %}
 
-    <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
-        Jesteś tutaj:
-        <a href="{{ site.url }}/przepisy/">Przepisy</a> /
-        {{ post.title }}
-    </nav>
+    {% include 'partial/breadcrumb.twig' %}
 
     <section class="recipe-hero recipe-hero--dark" aria-labelledby="recipe-title">
         <div class="recipe-hero__inner site-container">
