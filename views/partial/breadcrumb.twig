@@ -1,0 +1,13 @@
+{# Trail from the plugin context (`breadcrumbs`: text, url; the last item has no url) — same trail as the schema BreadcrumbList. #}
+{% if breadcrumbs is not empty %}
+    <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
+        Jesteś tutaj:
+        {% for crumb in breadcrumbs %}
+            {% if crumb.url and not loop.last %}
+                <a href="{{ crumb.url|e('esc_url') }}">{{ crumb.text|e }}</a> /
+            {% else %}
+                <span>{{ crumb.text|e }}</span>{% if not loop.last %} /{% endif %}
+            {% endif %}
+        {% endfor %}
+    </nav>
+{% endif %}

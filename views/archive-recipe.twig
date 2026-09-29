@@ -45,11 +45,7 @@
         }
     ] %}
 
-    <nav class="breadcrumb site-container" aria-label="Nawigacja okruszkowa">
-        Jesteś tutaj:
-        <a href="{{ site.url }}/przepisy/">Przepisy</a> /
-        <span>{{ archive_title }}</span>
-    </nav>
+    {% include 'partial/breadcrumb.twig' %}
 
     <div class="g4t-archive-hero-shell" data-g4t-archive-hero>
         <div class="g4t-archive-hero-grid site-container">
