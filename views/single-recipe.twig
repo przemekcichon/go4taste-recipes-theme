@@ -156,9 +156,10 @@
                             <h2 id="sec-preparation">Etapy przygotowania</h2>
                             <ol class="steps-checklist">
                                 {% for step in recipe_steps %}
-                                    <li class="step-item">
-                                        <label class="step-row" for="step-{{ loop.index }}">
-                                            <input id="step-{{ loop.index }}" class="step-check" type="checkbox" aria-label="Oznacz krok {{ loop.index }} jako wykonany">
+                                    {# id="step-N" is the HowToStep.url anchor from the recipe-schema slice — keep it on the step container. #}
+                                    <li class="step-item" id="step-{{ loop.index }}">
+                                        <label class="step-row" for="step-{{ loop.index }}-check">
+                                            <input id="step-{{ loop.index }}-check" class="step-check" type="checkbox" aria-label="Oznacz krok {{ loop.index }} jako wykonany">
                                             <div class="step-content">
                                                 {% set step_title = '' %}
                                                 {% if step is iterable and step.title is defined and step.title %}
