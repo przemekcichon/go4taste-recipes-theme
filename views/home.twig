@@ -8,8 +8,8 @@
         <div class="home-hero__inner site-container">
             <div class="home-hero__identity">
                 <p class="home-hero__eyebrow">Go4Taste Przepisy</p>
-                <h1 id="home-hero-title" class="home-hero__title">Nowa strona główna dla migracji przepisów</h1>
-                <p class="home-hero__lead">Startowy widok, który prowadzi użytkownika od kategorii i inspiracji do pojedynczego przepisu.</p>
+                <h1 id="home-hero-title" class="home-hero__title">Gotuj z naturalnych składników</h1>
+                <p class="home-hero__lead">Sprawdzone przepisy krok po kroku z orzechami, kaszami, bakaliami i przyprawami. Wybierz kategorię albo zacznij od najnowszej inspiracji.</p>
 
                 {% if recipe_home.active_filter_tags is not empty %}
                     <nav class="home-hero__chips" aria-label="Aktualnie wybrane filtry">
@@ -27,7 +27,9 @@
 
                 <div class="home-hero__cta-row">
                     <a class="home-cta home-cta--primary" href="#przepisy">Przeglądaj przepisy</a>
-                    <a class="home-cta home-cta--ghost" href="{{ site.url }}">Zobacz nowy przepis</a>
+                    {% if recipe_home.latest_recipe_url|default('') %}
+                        <a class="home-cta home-cta--ghost" href="{{ recipe_home.latest_recipe_url|e('esc_url') }}">Zobacz nowy przepis</a>
+                    {% endif %}
                 </div>
             </div>
 
