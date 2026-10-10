@@ -497,6 +497,7 @@
         quickActionsBarHost.classList.add("is-filter-open");
         filterButton.setAttribute("aria-expanded", "true");
         panel.setAttribute("aria-hidden", "false");
+        updateApplyButtonState();
     }
 
     function resetFilters() {
@@ -783,7 +784,7 @@
         panel.appendChild(panelForm);
         quickActionsBarHost.appendChild(panel);
         updateFilterButtonState();
-        updateApplyButtonState();
+        updateApplyButtonLabel(null);
 
         filterButton.addEventListener("click", function () {
             if (quickActionsBarHost.classList.contains("is-filter-open")) {
@@ -926,8 +927,6 @@
         parseFilterStateFromUrl();
         buildFilterPanel();
         updateFilterButtonState();
-        updateApplyButtonState();
-        window.setTimeout(updateApplyButtonState, 0);
     }
 
     setMode(getInitialMode());
