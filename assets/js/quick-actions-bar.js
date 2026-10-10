@@ -59,6 +59,7 @@
     var dynamicOptions = quickActionsConfig.options || {};
     var recipeEditConfig = quickActionsConfig.recipeEdit || {};
     var recipeAddConfig = quickActionsConfig.recipeAdd || {};
+    var filterCountUrl = typeof quickActionsConfig.filterCountUrl === "string" ? quickActionsConfig.filterCountUrl : "";
 
     var DEFAULT_MEAL_TYPE_OPTIONS = [];
     var DEFAULT_TIME_OPTIONS = [];
@@ -496,6 +497,7 @@
         quickActionsBarHost.classList.add("is-filter-open");
         filterButton.setAttribute("aria-expanded", "true");
         panel.setAttribute("aria-hidden", "false");
+        updateApplyButtonState();
     }
 
     function resetFilters() {
@@ -523,7 +525,11 @@
         applyButton.disabled = false;
         updateApplyButtonLabel(null);
 
-        window.fetch("/wp-json/go4taste-recipes/v1/filter-count", {
+        if (!filterCountUrl) {
+            return;
+        }
+
+        window.fetch(filterCountUrl, {
             method: "POST",
             credentials: "same-origin",
             headers: {
@@ -778,7 +784,7 @@
         panel.appendChild(panelForm);
         quickActionsBarHost.appendChild(panel);
         updateFilterButtonState();
-        updateApplyButtonState();
+        updateApplyButtonLabel(null);
 
         filterButton.addEventListener("click", function () {
             if (quickActionsBarHost.classList.contains("is-filter-open")) {
@@ -921,8 +927,6 @@
         parseFilterStateFromUrl();
         buildFilterPanel();
         updateFilterButtonState();
-        updateApplyButtonState();
-        window.setTimeout(updateApplyButtonState, 0);
     }
 
     setMode(getInitialMode());

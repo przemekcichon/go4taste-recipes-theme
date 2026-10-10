@@ -796,9 +796,10 @@ function go4taste_recipes_theme_enqueue_assets() {
 		'go4taste-recipes-quick-actions-bar',
 		'go4tasteQuickActionsConfig',
 		array(
-			'options'    => go4taste_recipes_theme_get_quick_actions_filter_options(),
-			'recipeEdit' => go4taste_recipes_theme_get_recipe_edit_quick_action( (string) $source_post_type ),
-			'recipeAdd'  => go4taste_recipes_theme_get_recipe_add_quick_action(),
+			'options'        => go4taste_recipes_theme_get_quick_actions_filter_options(),
+			'recipeEdit'     => go4taste_recipes_theme_get_recipe_edit_quick_action( (string) $source_post_type ),
+			'recipeAdd'      => go4taste_recipes_theme_get_recipe_add_quick_action(),
+			'filterCountUrl' => esc_url_raw( rest_url( 'go4taste-recipes/v1/filter-count' ) ),
 		)
 	);
 }
