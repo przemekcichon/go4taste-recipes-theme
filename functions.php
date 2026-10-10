@@ -631,6 +631,27 @@ function go4taste_recipes_theme_get_recipe_add_quick_action(): array {
 }
 
 /**
+ * Concatenate theme stylesheets from assets/css for inline output.
+ *
+ * @param string[] $files File names relative to assets/css, in cascade order.
+ */
+function go4taste_recipes_theme_get_inline_css( array $files ): string {
+	$css_dir = get_template_directory() . '/assets/css/';
+	$css     = '';
+
+	foreach ( $files as $file ) {
+		$contents = file_get_contents( $css_dir . $file );
+
+		if ( false !== $contents ) {
+			// A UTF-8 BOM is ignored in a linked file but would break the first selector inline.
+			$css .= preg_replace( '/^\xEF\xBB\xBF/', '', $contents ) . "\n";
+		}
+	}
+
+	return $css;
+}
+
+/**
  * Enqueue full prototype assets for recipe views.
  */
 function go4taste_recipes_theme_enqueue_assets() {
@@ -658,53 +679,18 @@ function go4taste_recipes_theme_enqueue_assets() {
 		'all'
 	);
 
-	wp_enqueue_style(
-		'go4taste-recipes-main',
-		$base_uri . '/css/main.css',
-		array( 'go4taste-recipes-fonts' ),
-		$theme_version,
-		'all'
-	);
+	// Theme CSS is printed inline in <head> instead of as separate render-blocking files.
+	// Order matters: it is the cascade order the files had as linked stylesheets.
+	$css_files = array( 'main.css' );
 
 	if ( $is_recipe_single ) {
-		wp_enqueue_style(
-			'go4taste-recipes-single',
-			$base_uri . '/css/single-recipe.css',
-			array( 'go4taste-recipes-main' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-single-ingredients',
-			$base_uri . '/css/single-recipe-ingredients.css',
-			array( 'go4taste-recipes-single' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-single-steps',
-			$base_uri . '/css/single-recipe-steps.css',
-			array( 'go4taste-recipes-single-ingredients' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-single-ads',
-			$base_uri . '/css/single-recipe-go4taste-ads.css',
-			array( 'go4taste-recipes-single-steps' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-single-hero',
-			$base_uri . '/css/single-recipe-hero.css',
-			array( 'go4taste-recipes-single-ads' ),
-			$theme_version,
-			'all'
+		array_push(
+			$css_files,
+			'single-recipe.css',
+			'single-recipe-ingredients.css',
+			'single-recipe-steps.css',
+			'single-recipe-go4taste-ads.css',
+			'single-recipe-hero.css'
 		);
 
 		wp_enqueue_script(
@@ -725,28 +711,11 @@ function go4taste_recipes_theme_enqueue_assets() {
 	}
 
 	if ( $is_recipe_archive || $is_recipe_home || $is_404 ) {
-		wp_enqueue_style(
-			'go4taste-recipes-archive',
-			$base_uri . '/css/archive-recipes.css',
-			array( 'go4taste-recipes-main' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-archive-hero',
-			$base_uri . '/css/archive-recipes-hero.css',
-			array( 'go4taste-recipes-archive' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-archive-ads',
-			$base_uri . '/css/archive-recipes-go4taste-ads.css',
-			array( 'go4taste-recipes-archive-hero' ),
-			$theme_version,
-			'all'
+		array_push(
+			$css_files,
+			'archive-recipes.css',
+			'archive-recipes-hero.css',
+			'archive-recipes-go4taste-ads.css'
 		);
 
 		wp_enqueue_script(
@@ -759,30 +728,14 @@ function go4taste_recipes_theme_enqueue_assets() {
 	}
 
 	if ( $is_recipe_home ) {
-		wp_enqueue_style(
-			'go4taste-recipes-home-hero',
-			$base_uri . '/css/home-hero.css',
-			array( 'go4taste-recipes-main' ),
-			$theme_version,
-			'all'
-		);
-
-		wp_enqueue_style(
-			'go4taste-recipes-home',
-			$base_uri . '/css/home.css',
-			array( 'go4taste-recipes-home-hero' ),
-			$theme_version,
-			'all'
-		);
+		array_push( $css_files, 'home-hero.css', 'home.css' );
 	}
 
-	wp_enqueue_style(
-		'go4taste-recipes-quick-actions-bar',
-		$base_uri . '/css/quick-actions-bar.css',
-		array( 'go4taste-recipes-main' ),
-		$theme_version,
-		'all'
-	);
+	$css_files[] = 'quick-actions-bar.css';
+
+	wp_register_style( 'go4taste-recipes-theme', false, array( 'go4taste-recipes-fonts' ), null );
+	wp_enqueue_style( 'go4taste-recipes-theme' );
+	wp_add_inline_style( 'go4taste-recipes-theme', go4taste_recipes_theme_get_inline_css( $css_files ) );
 
 	wp_enqueue_script(
 		'go4taste-recipes-quick-actions-bar',
