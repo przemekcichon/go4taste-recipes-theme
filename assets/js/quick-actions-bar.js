@@ -59,6 +59,7 @@
     var dynamicOptions = quickActionsConfig.options || {};
     var recipeEditConfig = quickActionsConfig.recipeEdit || {};
     var recipeAddConfig = quickActionsConfig.recipeAdd || {};
+    var filterCountUrl = typeof quickActionsConfig.filterCountUrl === "string" ? quickActionsConfig.filterCountUrl : "";
 
     var DEFAULT_MEAL_TYPE_OPTIONS = [];
     var DEFAULT_TIME_OPTIONS = [];
@@ -523,7 +524,11 @@
         applyButton.disabled = false;
         updateApplyButtonLabel(null);
 
-        window.fetch("/wp-json/go4taste-recipes/v1/filter-count", {
+        if (!filterCountUrl) {
+            return;
+        }
+
+        window.fetch(filterCountUrl, {
             method: "POST",
             credentials: "same-origin",
             headers: {
