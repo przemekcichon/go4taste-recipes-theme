@@ -733,9 +733,19 @@ function go4taste_recipes_theme_enqueue_assets() {
 
 	$css_files[] = 'quick-actions-bar.css';
 
-	wp_register_style( 'go4taste-recipes-theme', false, array( 'go4taste-recipes-fonts' ), null );
+	wp_register_style(
+		'go4taste-recipes-theme',
+		false,
+		array( 'go4taste-recipes-fonts' ),
+		null
+	);
+
 	wp_enqueue_style( 'go4taste-recipes-theme' );
-	wp_add_inline_style( 'go4taste-recipes-theme', go4taste_recipes_theme_get_inline_css( $css_files ) );
+
+	wp_add_inline_style(
+		'go4taste-recipes-theme',
+		go4taste_recipes_theme_get_inline_css( $css_files )
+	);
 
 	wp_enqueue_script(
 		'go4taste-recipes-quick-actions-bar',
