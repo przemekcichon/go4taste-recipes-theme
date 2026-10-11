@@ -140,6 +140,16 @@ class StarterSite extends Site {
 	function update_twig_environment_options( $options ) {
 	    // $options['autoescape'] = true;
 
+		// Compiled templates live outside the theme (vendor/ is committed and
+		// deploys replace the theme folder). auto_reload recompiles a template
+		// when its file changes, so a deploy needs no manual cache flush.
+		// Twig throws on an unwritable cache dir, so fall back to no cache.
+		$cache_dir = WP_CONTENT_DIR . '/cache/go4taste-recipes-theme/twig';
+		if ( wp_mkdir_p( $cache_dir ) && wp_is_writable( $cache_dir ) ) {
+			$options['cache']       = $cache_dir;
+			$options['auto_reload'] = true;
+		}
+
 	    return $options;
 	}
 }
