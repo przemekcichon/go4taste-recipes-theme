@@ -179,7 +179,11 @@
                     <li class="recipe-teaser-card">
                         <a href="{{ post_item.link|e('esc_url') }}" class="recipe-teaser-card__link">
                             {% if post_item.thumbnail %}
-                                <img src="{{ post_item.thumbnail.src|e('esc_url') }}" alt="{{ post_item.title }}" loading="lazy">
+                                {# Rendered width per breakpoint (archive-recipes.css). #}
+                                <img src="{{ post_item.thumbnail.src|e('esc_url') }}"
+                                    {% if post_item.thumbnail.srcset %}srcset="{{ post_item.thumbnail.srcset|esc_attr }}" sizes="(max-width: 640px) calc(100vw - 62px), (max-width: 1024px) calc((100vw - 88px) / 2), (max-width: 1280px) calc((100vw - 113px) / 3), 389px"{% endif %}
+                                    {% if post_item.thumbnail.width %}width="{{ post_item.thumbnail.width }}" height="{{ post_item.thumbnail.height }}"{% endif %}
+                                    alt="{{ post_item.title }}" loading="lazy">
                             {% endif %}
                             <div class="recipe-teaser-card__body">
                                 <h3>{{ post_item.title }}</h3>
