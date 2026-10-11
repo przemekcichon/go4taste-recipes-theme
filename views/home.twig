@@ -15,7 +15,7 @@
                     <nav class="home-hero__chips" aria-label="Aktualnie wybrane filtry">
                         {% for tag in recipe_home.active_filter_tags %}
                             {% if tag.url %}
-                                <a class="home-chip" href="{{ tag.url|e('esc_url') }}" title="Przepisy z {{ tag.name }}">
+                                <a class="home-chip" href="{{ tag.url|e('esc_url') }}" title="Przepisy z {{ tag.name|esc_attr }}">
                                     {{ tag.name }}
                                 </a>
                             {% else %}
