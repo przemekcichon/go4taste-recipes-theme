@@ -649,7 +649,7 @@ function go4taste_recipes_theme_get_inline_css( array $files ): string {
 	}
 
 	// Inline CSS resolves relative URLs against the page, so point url(../…) back at assets/.
-	return str_replace( 'url(../', 'url(' . get_template_directory_uri() . '/assets/', $css );
+	return preg_replace( '#url\(\s*([\'"]?)\.\./#', 'url($1' . get_template_directory_uri() . '/assets/', $css );
 }
 
 /**
