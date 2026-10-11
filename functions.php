@@ -648,7 +648,28 @@ function go4taste_recipes_theme_get_inline_css( array $files ): string {
 		}
 	}
 
-	return $css;
+	// Inline CSS resolves relative URLs against the page, so point url(../…) back at assets/.
+	return preg_replace( '#url\(\s*([\'"]?)\.\./#', 'url($1' . get_template_directory_uri() . '/assets/', $css );
+}
+
+/**
+ * Preload the fonts used on the first screen: Open Sans (all body weights) and Fira Sans Condensed 700 (headings).
+ *
+ * @param array[] $resources Resources passed to the wp_preload_resources filter.
+ */
+function go4taste_recipes_theme_preload_fonts( array $resources ): array {
+	$fonts_uri = get_template_directory_uri() . '/assets/fonts/';
+
+	foreach ( array( 'open-sans-latin.woff2', 'fira-sans-condensed-700-latin.woff2' ) as $file ) {
+		$resources[] = array(
+			'href'        => $fonts_uri . $file,
+			'as'          => 'font',
+			'type'        => 'font/woff2',
+			'crossorigin' => 'anonymous',
+		);
+	}
+
+	return $resources;
 }
 
 /**
@@ -671,17 +692,12 @@ function go4taste_recipes_theme_enqueue_assets() {
 	$base_uri      = get_template_directory_uri() . '/assets';
 	$quick_actions_version = filemtime( get_template_directory() . '/assets/js/quick-actions-bar.js' );
 
-	wp_enqueue_style(
-		'go4taste-recipes-fonts',
-		'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Fira+Sans+Condensed:wght@400;600;700&display=swap',
-		array(),
-		null,
-		'all'
-	);
+	// wp_preload_resources runs on wp_head after wp_enqueue_scripts (both priority 1).
+	add_filter( 'wp_preload_resources', 'go4taste_recipes_theme_preload_fonts' );
 
 	// Theme CSS is printed inline in <head> instead of as separate render-blocking files.
 	// Order matters: it is the cascade order the files had as linked stylesheets.
-	$css_files = array( 'main.css' );
+	$css_files = array( 'fonts.css', 'main.css' );
 
 	if ( $is_recipe_single ) {
 		array_push(
@@ -736,7 +752,7 @@ function go4taste_recipes_theme_enqueue_assets() {
 	wp_register_style(
 		'go4taste-recipes-theme',
 		false,
-		array( 'go4taste-recipes-fonts' ),
+		array(),
 		null
 	);
 

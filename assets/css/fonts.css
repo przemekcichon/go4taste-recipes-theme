@@ -1,0 +1,105 @@
+/* Self-hosted fonts (OFL 1.1, see assets/fonts/OFL-*.txt).
+   Subset: Google Fonts "latin" range + Latin Extended-A (Polish letters); Open Sans also U+2190-2192.
+   Open Sans is a variable font: one file covers weights 400-700. */
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url(../fonts/open-sans-latin.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Fira Sans Condensed';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../fonts/fira-sans-condensed-400-latin.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Fira Sans Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url(../fonts/fira-sans-condensed-600-latin.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Fira Sans Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(../fonts/fira-sans-condensed-700-latin.woff2) format('woff2');
+}
+
+/* Metric-matched fallbacks: shown until the web fonts load, sized so the swap does not shift layout (CLS).
+   size-adjust = average glyph width vs Arial on Polish recipe text; ascent/descent = font metrics / size-adjust.
+   unicode-range matches the web font subset, so other characters still fall back to the system font. */
+@font-face {
+    font-family: 'Open Sans Fallback';
+    font-weight: 400;
+    src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+    size-adjust: 103.17%;
+    ascent-override: 103.59%;
+    descent-override: 28.40%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Open Sans Fallback';
+    font-weight: 500;
+    src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+    size-adjust: 105.01%;
+    ascent-override: 101.78%;
+    descent-override: 27.90%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Open Sans Fallback';
+    font-weight: 600;
+    src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+    size-adjust: 100.28%;
+    ascent-override: 106.58%;
+    descent-override: 29.22%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Open Sans Fallback';
+    font-weight: 700;
+    src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+    size-adjust: 103.68%;
+    ascent-override: 103.09%;
+    descent-override: 28.26%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Fira Sans Condensed Fallback';
+    font-weight: 400;
+    src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+    size-adjust: 90.51%;
+    ascent-override: 103.30%;
+    descent-override: 29.28%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Fira Sans Condensed Fallback';
+    font-weight: 600;
+    src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+    size-adjust: 86.28%;
+    ascent-override: 108.37%;
+    descent-override: 30.72%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
+@font-face {
+    font-family: 'Fira Sans Condensed Fallback';
+    font-weight: 700;
+    src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+    size-adjust: 86.58%;
+    ascent-override: 107.99%;
+    descent-override: 30.61%;
+    line-gap-override: 0%;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+0100-017F;
+}
