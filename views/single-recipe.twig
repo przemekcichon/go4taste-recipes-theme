@@ -57,7 +57,7 @@
                 {% if all_taxonomies %}
                     <nav class="recipe-hero__tags" aria-label="Kategorie przepisu">
                         {% for term in all_taxonomies %}
-                            <a class="recipe-hero__tag" href="{{ term.link }}">{{ term.name }}</a>
+                            <a class="recipe-hero__tag" href="{{ term.link|e('esc_url') }}">{{ term.name }}</a>
                         {% endfor %}
                     </nav>
                 {% endif %}
@@ -109,12 +109,12 @@
                         <img src="{{ recipe_hero.image|e('esc_url') }}"
                             {% if recipe_hero.image_srcset|default('') %}srcset="{{ recipe_hero.image_srcset|esc_attr }}" sizes="{{ hero_sizes }}"{% endif %}
                             {% if recipe_hero.image_width|default(0) %}width="{{ recipe_hero.image_width }}" height="{{ recipe_hero.image_height }}"{% endif %}
-                            alt="{{ post.title }}" loading="eager" fetchpriority="high">
+                            alt="{{ post.title|esc_attr }}" loading="eager" fetchpriority="high">
                     {% elseif post.thumbnail %}
                         <img src="{{ post.thumbnail.src|e('esc_url') }}"
                             {% if post.thumbnail.srcset %}srcset="{{ post.thumbnail.srcset|esc_attr }}" sizes="{{ hero_sizes }}"{% endif %}
                             {% if post.thumbnail.width %}width="{{ post.thumbnail.width }}" height="{{ post.thumbnail.height }}"{% endif %}
-                            alt="{{ post.title }}" loading="eager" fetchpriority="high">
+                            alt="{{ post.title|esc_attr }}" loading="eager" fetchpriority="high">
                     {% endif %}
                 </figure>
             </aside>
@@ -210,7 +210,7 @@
                                                 {% if step_images %}
                                                     {% for image_url in step_images %}
                                                         <figure class="step-media">
-                                                            <img src="{{ image_url|e('esc_url') }}" alt="{{ step_title ? step_title : ('Krok ' ~ loop.parent.loop.index) }}" loading="lazy">
+                                                            <img src="{{ image_url|e('esc_url') }}" alt="{{ (step_title ? step_title : ('Krok ' ~ loop.parent.loop.index))|esc_attr }}" loading="lazy">
                                                         </figure>
                                                     {% endfor %}
                                                 {% endif %}
@@ -244,7 +244,7 @@
                         <h2 id="sec-ingredients">Składniki</h2>
                         {% if recipe_ingredients_photo_url %}
                             <figure class="ingredients-photo">
-                                <img src="{{ recipe_ingredients_photo_url }}" alt="Przygotowane skladniki" loading="lazy">
+                                <img src="{{ recipe_ingredients_photo_url|e('esc_url') }}" alt="Przygotowane skladniki" loading="lazy">
                             </figure>
                         {% endif %}
                         <p class="recipe-servings">Porcja: <strong>{{ servings_text ? servings_text ~ (servings_person_suffix ? ' ' ~ servings_person_suffix : '') : 'brak danych' }}</strong></p>
@@ -312,7 +312,7 @@
                             <li class="g4t-product-card">
                                 <a class="g4t-product-card__link" href="{{ product_data.link|e('esc_url') }}">
                                     <figure class="g4t-product-card__figure">
-                                        <img class="g4t-product-card__image" src="{{ product_data.picture|e('esc_url') }}" alt="{{ product_data.name }}" loading="lazy">
+                                        <img class="g4t-product-card__image" src="{{ product_data.picture|e('esc_url') }}" alt="{{ product_data.name|esc_attr }}" loading="lazy">
                                     </figure>
                                     <div class="g4t-product-card__info">
                                         <div class="g4t-product-card__top">
