@@ -106,7 +106,12 @@
                 <div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--inner"></div>
                 <div class="g4t-archive-hero-visual__photo-wrap">
                     {% if hero_image %}
-                        <img class="g4t-archive-hero-visual__photo" src="{{ hero_image.url|e('esc_url') }}" alt="{{ hero_image.alt|default(hero_title_suffix) }}" loading="eager">
+                        {# 185px wide (archive-recipes-hero.css); hidden below 1001px. #}
+                        {% set hero_photo = hero_image.ID|default(0) ? get_image(hero_image.ID) : null %}
+                        <img class="g4t-archive-hero-visual__photo" src="{{ hero_image.url|e('esc_url') }}"
+                            {% if hero_photo and hero_photo.srcset %}srcset="{{ hero_photo.srcset|esc_attr }}" sizes="185px"{% endif %}
+                            {% if hero_image.width|default(0) %}width="{{ hero_image.width }}" height="{{ hero_image.height }}"{% endif %}
+                            alt="{{ hero_image.alt|default(hero_title_suffix) }}" loading="eager">
                     {% else %}
                         <img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Pistacje luskane" loading="eager">
                     {% endif %}

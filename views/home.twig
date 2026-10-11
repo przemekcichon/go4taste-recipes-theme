@@ -36,7 +36,11 @@
             <aside class="home-hero__feature" aria-label="Wyróżniony przepis">
                 {% set featured = posts|length ? posts|first : null %}
                 {% if featured and featured.thumbnail %}
-                    <img src="{{ featured.thumbnail.src|e('esc_url') }}" alt="{{ featured.title }}" loading="eager">
+                    {# Rendered width per breakpoint (home-hero.css). #}
+                    <img src="{{ featured.thumbnail.src|e('esc_url') }}"
+                        {% if featured.thumbnail.srcset %}srcset="{{ featured.thumbnail.srcset|esc_attr }}" sizes="(max-width: 1100px) calc(100vw - 90px), 390px"{% endif %}
+                        {% if featured.thumbnail.width %}width="{{ featured.thumbnail.width }}" height="{{ featured.thumbnail.height }}"{% endif %}
+                        alt="{{ featured.title }}" loading="eager" fetchpriority="high">
                 {% endif %}
                 <h2>{{ featured ? featured.title : 'Wyróżniony przepis' }}</h2>
                 <p>{{ featured ? featured.preview.length(15).read_more('') : 'Nowe inspiracje z kuchni Go4Taste.' }}</p>
