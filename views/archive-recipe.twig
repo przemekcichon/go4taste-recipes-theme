@@ -106,7 +106,12 @@
                 <div class="g4t-archive-hero-visual__ring g4t-archive-hero-visual__ring--inner"></div>
                 <div class="g4t-archive-hero-visual__photo-wrap">
                     {% if hero_image %}
-                        <img class="g4t-archive-hero-visual__photo" src="{{ hero_image.url|e('esc_url') }}" alt="{{ hero_image.alt|default(hero_title_suffix) }}" loading="eager">
+                        {# 185px wide (archive-recipes-hero.css); hidden below 1001px. #}
+                        {% set hero_photo = hero_image.ID|default(0) ? get_image(hero_image.ID) : null %}
+                        <img class="g4t-archive-hero-visual__photo" src="{{ hero_image.url|e('esc_url') }}"
+                            {% if hero_photo and hero_photo.srcset %}srcset="{{ hero_photo.srcset|esc_attr }}" sizes="185px"{% endif %}
+                            {% if hero_image.width|default(0) %}width="{{ hero_image.width }}" height="{{ hero_image.height }}"{% endif %}
+                            alt="{{ hero_image.alt|default(hero_title_suffix) }}" loading="eager">
                     {% else %}
                         <img class="g4t-archive-hero-visual__photo" src="https://go4taste.pl/1278-large_default/granola-z-pistacjami.jpg" alt="Pistacje luskane" loading="eager">
                     {% endif %}
@@ -174,7 +179,11 @@
                     <li class="recipe-teaser-card">
                         <a href="{{ post_item.link|e('esc_url') }}" class="recipe-teaser-card__link">
                             {% if post_item.thumbnail %}
-                                <img src="{{ post_item.thumbnail.src|e('esc_url') }}" alt="{{ post_item.title }}" loading="lazy">
+                                {# Rendered width per breakpoint (archive-recipes.css). #}
+                                <img src="{{ post_item.thumbnail.src|e('esc_url') }}"
+                                    {% if post_item.thumbnail.srcset %}srcset="{{ post_item.thumbnail.srcset|esc_attr }}" sizes="(max-width: 640px) calc(100vw - 62px), (max-width: 1024px) calc((100vw - 88px) / 2), (max-width: 1280px) calc((100vw - 113px) / 3), 389px"{% endif %}
+                                    {% if post_item.thumbnail.width %}width="{{ post_item.thumbnail.width }}" height="{{ post_item.thumbnail.height }}"{% endif %}
+                                    alt="{{ post_item.title }}" loading="lazy">
                             {% endif %}
                             <div class="recipe-teaser-card__body">
                                 <h3>{{ post_item.title }}</h3>

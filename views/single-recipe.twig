@@ -103,10 +103,18 @@
 
             <aside class="recipe-hero__visual" aria-label="Podglad dania">
                 <figure class="recipe-hero__figure">
+                    {# Rendered width per breakpoint (single-recipe-hero.css, single-recipe.css). #}
+                    {% set hero_sizes = '(max-width: 680px) calc(100vw - 94px), (max-width: 980px) 586px, 386px' %}
                     {% if recipe_hero and recipe_hero.image %}
-                        <img src="{{ recipe_hero.image|e('esc_url') }}" alt="{{ post.title }}" loading="eager">
+                        <img src="{{ recipe_hero.image|e('esc_url') }}"
+                            {% if recipe_hero.image_srcset|default('') %}srcset="{{ recipe_hero.image_srcset|esc_attr }}" sizes="{{ hero_sizes }}"{% endif %}
+                            {% if recipe_hero.image_width|default(0) %}width="{{ recipe_hero.image_width }}" height="{{ recipe_hero.image_height }}"{% endif %}
+                            alt="{{ post.title }}" loading="eager" fetchpriority="high">
                     {% elseif post.thumbnail %}
-                        <img src="{{ post.thumbnail.src|e('esc_url') }}" alt="{{ post.title }}" loading="eager">
+                        <img src="{{ post.thumbnail.src|e('esc_url') }}"
+                            {% if post.thumbnail.srcset %}srcset="{{ post.thumbnail.srcset|esc_attr }}" sizes="{{ hero_sizes }}"{% endif %}
+                            {% if post.thumbnail.width %}width="{{ post.thumbnail.width }}" height="{{ post.thumbnail.height }}"{% endif %}
+                            alt="{{ post.title }}" loading="eager" fetchpriority="high">
                     {% endif %}
                 </figure>
             </aside>
