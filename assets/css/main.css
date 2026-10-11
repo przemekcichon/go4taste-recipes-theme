@@ -19,8 +19,8 @@ img { display: block; max-width: 100%; height: auto; }
     --c-border:  #dddddd;
     --c-tip-bg:  #f9f9f9;
 
-    --font-body: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-head: 'Fira Sans Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Open Sans', 'Open Sans Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-head: 'Fira Sans Condensed', 'Fira Sans Condensed Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --text-size: 18px;
     --text-lh:   1.75;
 
